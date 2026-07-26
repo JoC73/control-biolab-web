@@ -938,7 +938,7 @@ small {
 .report-footer {
     margin-top: auto;
     border-top: 2px solid #111827;
-    padding-top: 7px;
+    padding-top: 18px;
     color: #0f416d;
     text-align: center;
     font-weight: 900;
@@ -953,8 +953,8 @@ small {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 10px;
-    margin-bottom: 5px;
+    gap: 34px;
+    margin-bottom: 7px;
 }
 
 .mini-stamp {

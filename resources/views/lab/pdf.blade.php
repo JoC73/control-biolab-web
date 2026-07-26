@@ -122,10 +122,10 @@
         .report-footer {
             position: fixed;
             right: 28px;
-            bottom: 18px;
+            bottom: 14px;
             left: 28px;
             border-top: 2px solid #111827;
-            padding-top: 7px;
+            padding-top: 16px;
             text-align: center;
             color: #0f416d;
             font-weight: bold;
@@ -134,7 +134,7 @@
 
         .footer-seal {
             text-align: center;
-            margin-bottom: 5px;
+            margin-bottom: 7px;
         }
 
         .mini-stamp,
@@ -169,7 +169,7 @@
         .signature-img {
             width: 116px;
             height: auto;
-            margin: 0 0 0 10px;
+            margin: 0 0 0 28px;
         }
     </style>
 </head>
