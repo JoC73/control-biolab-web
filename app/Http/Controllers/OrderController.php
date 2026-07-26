@@ -58,6 +58,15 @@ class OrderController extends Controller
         $category = $this->category($data['category_slug']);
         abort_if($category === null, 404);
 
+        $total = max(0, round((float) ($data['price'] ?? 0) - (float) ($data['discount'] ?? 0), 2));
+        $paid = round((float) ($data['paid_amount'] ?? 0), 2);
+
+        if ($paid > $total) {
+            return back()
+                ->withErrors(['paid_amount' => 'El pago inicial no puede ser mayor al total neto.'])
+                ->withInput();
+        }
+
         $order = $this->orders->create($data, $category);
         $this->audit->record('order_created', 'order', $order['id'], [
             'patient' => $order['patient_name'],
