@@ -77,7 +77,7 @@
                 </div>
                 <div class="field">
                     <label for="paid_amount">Pago inicial</label>
-                    <input id="paid_amount" name="paid_amount" type="number" step="0.01" min="0" max="{{ number_format($initialTotal, 2, '.', '') }}" value="{{ $initialPaidValue !== null ? $initialPaidValue : '' }}" placeholder="0.00" data-paid data-money-input>
+                    <input id="paid_amount" name="paid_amount" type="number" step="0.01" min="0" value="{{ $initialPaidValue !== null ? $initialPaidValue : '' }}" placeholder="0.00" data-paid data-money-input>
                 </div>
                 <div class="field">
                     <label for="payment_method">Forma de pago</label>
@@ -128,7 +128,6 @@
 
                 total.value = netTotal.toFixed(2);
                 balance.value = Math.max(0, netTotal - paidAmount).toFixed(2);
-                paid.max = netTotal.toFixed(2);
             };
             const scheduleUpdate = () => {
                 update();
@@ -146,6 +145,7 @@
                 field.addEventListener('change', scheduleUpdate);
                 field.addEventListener('keyup', scheduleUpdate);
             });
+            document.getElementById('order-form')?.addEventListener('submit', scheduleUpdate);
             window.addEventListener('load', scheduleUpdate);
             window.addEventListener('pageshow', scheduleUpdate);
             document.addEventListener('visibilitychange', scheduleUpdate);
