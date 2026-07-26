@@ -189,11 +189,24 @@ class OrderController extends Controller
         ]);
         $this->audit->record('order_payment_added', 'order', $id, ['amount' => $amount, 'movement_id' => $movement['id']]);
 
-        return redirect()->route('orders.show', $id)->with('status', 'Pago registrado. Estado: '.$updated['payment_status']);
+        return redirect()->route('orders.show', $id)->with('status', 'Pago registrado. Estado: '.$this->paymentStatusLabel($updated['payment_status']));
     }
 
     public function deliver(string $id)
     {
+        $order = $this->orders->find($id);
+        abort_if($order === null, 404);
+
+        $balance = max(0, round((float) $order['total'] - (float) $order['paid_amount'], 2));
+
+        if (($order['payment_status'] ?? null) !== 'paid' || $balance > 0) {
+            return back()->withErrors(['delivery' => 'No se puede entregar: saldo pendiente Q '.number_format($balance, 2).'.']);
+        }
+
+        if (($order['status'] ?? null) !== 'ready') {
+            return back()->withErrors(['delivery' => 'No se puede entregar: resultados pendientes.']);
+        }
+
         $updated = $this->orders->markDelivered($id);
         $this->audit->record('order_delivered', 'order', $id);
 
@@ -277,6 +290,15 @@ class OrderController extends Controller
     private function orderHasAnyResult(array $order): bool
     {
         return collect($order['results'] ?? [])->contains(fn ($value) => filled($value));
+    }
+
+    private function paymentStatusLabel(string $status): string
+    {
+        return [
+            'unpaid' => 'Sin pago',
+            'partial' => 'Parcial',
+            'paid' => 'Pagado',
+        ][$status] ?? $status;
     }
 
     private function pdfResponse(array $order, string $disposition)

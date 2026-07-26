@@ -1,6 +1,11 @@
 @extends('layouts.lab', ['title' => 'Ordenes'])
 
 @section('body')
+    @php
+        $statusLabels = ['pending_results' => 'Pendiente resultado', 'ready' => 'Listo', 'delivered' => 'Entregado', 'cancelled' => 'Anulado'];
+        $paymentLabels = ['unpaid' => 'Sin pago', 'partial' => 'Parcial', 'paid' => 'Pagado'];
+    @endphp
+
     <main class="app-shell">
         <header class="topbar compact">
             <div>
@@ -54,8 +59,8 @@
                             <span>{{ $order['category_name'] }} · {{ \Illuminate\Support\Carbon::parse($order['date'])->format('d/m/Y') }}</span>
                             <em>{{ $order['referrer'] ?: 'Sin referencia' }}</em>
                             <span class="badge-line">
-                                <span class="status-badge status-{{ $order['status'] }}">{{ str_replace('_', ' ', $order['status']) }}</span>
-                                <span class="status-badge pay-{{ $order['payment_status'] }}">{{ $order['payment_status'] }}</span>
+                                <span class="status-badge status-{{ $order['status'] }}">{{ $statusLabels[$order['status']] ?? $order['status'] }}</span>
+                                <span class="status-badge pay-{{ $order['payment_status'] }}">{{ $paymentLabels[$order['payment_status']] ?? $order['payment_status'] }}</span>
                             </span>
                         </a>
                         <div class="row-tools">

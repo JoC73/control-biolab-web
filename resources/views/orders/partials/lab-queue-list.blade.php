@@ -2,6 +2,7 @@
     @forelse ($orders as $order)
         @php
             $balance = max(0, (float) $order['total'] - (float) $order['paid_amount']);
+            $paymentLabels = ['unpaid' => 'Sin pago', 'partial' => 'Parcial', 'paid' => 'Pagado'];
         @endphp
         <article class="history-row lab-queue-row">
             <a href="{{ route('orders.show', $order['id']) }}">
@@ -9,7 +10,7 @@
                 <span>{{ $order['category_name'] }} · {{ \Illuminate\Support\Carbon::parse($order['date'])->format('d/m/Y') }}</span>
                 <em>{{ $order['referrer'] ?: 'Sin referencia' }}</em>
                 <span class="badge-line">
-                    <span class="status-badge pay-{{ $order['payment_status'] }}">{{ $order['payment_status'] }}</span>
+                    <span class="status-badge pay-{{ $order['payment_status'] }}">{{ $paymentLabels[$order['payment_status']] ?? $order['payment_status'] }}</span>
                     <span class="soft-badge">Saldo Q {{ number_format($balance, 2) }}</span>
                 </span>
             </a>

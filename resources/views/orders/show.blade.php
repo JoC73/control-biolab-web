@@ -3,6 +3,9 @@
 @section('body')
     @php
         $balance = max(0, round((float) $order['total'] - (float) $order['paid_amount'], 2));
+        $statusLabels = ['pending_results' => 'Pendiente resultado', 'ready' => 'Listo', 'delivered' => 'Entregado', 'cancelled' => 'Anulado'];
+        $paymentLabels = ['unpaid' => 'Sin pago', 'partial' => 'Parcial', 'paid' => 'Pagado'];
+        $canDeliver = ($order['status'] ?? null) === 'ready' && ($order['payment_status'] ?? null) === 'paid' && $balance <= 0;
     @endphp
 
     <main class="app-shell">
@@ -12,8 +15,8 @@
                 <h1>{{ $order['patient_name'] }}</h1>
                 <p>
                     {{ $order['category_name'] }}
-                    <span class="status-badge status-{{ $order['status'] }}">{{ str_replace('_', ' ', $order['status']) }}</span>
-                    <span class="status-badge pay-{{ $order['payment_status'] }}">{{ $order['payment_status'] }}</span>
+                    <span class="status-badge status-{{ $order['status'] }}">{{ $statusLabels[$order['status']] ?? $order['status'] }}</span>
+                    <span class="status-badge pay-{{ $order['payment_status'] }}">{{ $paymentLabels[$order['payment_status']] ?? $order['payment_status'] }}</span>
                 </p>
             </div>
             <div class="top-actions">
@@ -81,8 +84,17 @@
                 <div class="row-tools">
                     <form method="POST" action="{{ route('orders.deliver', $order['id']) }}">
                         @csrf
-                        <button class="button" type="submit" @disabled($order['status'] === 'cancelled')>Marcar entregada</button>
+                        <button class="button" type="submit" @disabled(! $canDeliver)>Marcar entregada</button>
                     </form>
+                    @if (! in_array($order['status'] ?? null, ['cancelled', 'delivered'], true) && ! $canDeliver)
+                        <p class="empty-state">
+                            @if ($balance > 0)
+                                No se puede entregar: saldo pendiente Q {{ number_format($balance, 2) }}.
+                            @elseif (($order['status'] ?? null) !== 'ready')
+                                No se puede entregar: resultados pendientes.
+                            @endif
+                        </p>
+                    @endif
                     @if ($order['status'] !== 'cancelled')
                         <form method="POST" action="{{ route('orders.cancel', $order['id']) }}" onsubmit="return confirm('Deseas anular esta orden? Se registrara reverso en caja si tiene pagos.')">
                             @csrf
