@@ -4,6 +4,6 @@ buildCommand = "npm run build"
 
 [deploy]
 preDeployCommand = "chmod +x ./railway/init-app.sh && sh ./railway/init-app.sh"
-startCommand = "php artisan serve --host=0.0.0.0 --port=${PORT}"
+startCommand = "APP_PORT=$(printf '%s' \"${PORT:-10000}\" | sed 's/[^0-9].*$//'); [ -z \"$APP_PORT\" ] && APP_PORT=10000; php -S 0.0.0.0:$APP_PORT -t public public/index.php"
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 10
