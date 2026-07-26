@@ -1,6 +1,10 @@
 @extends('layouts.lab', ['title' => 'Orden - '.$order['patient_name']])
 
 @section('body')
+    @php
+        $balance = max(0, round((float) $order['total'] - (float) $order['paid_amount'], 2));
+    @endphp
+
     <main class="app-shell">
         <header class="topbar compact">
             <div>
@@ -28,11 +32,14 @@
         @if (session('status'))
             <div class="status-message wide">{{ session('status') }}</div>
         @endif
+        @if ($errors->any())
+            <div class="status-message wide error-message">{{ $errors->first() }}</div>
+        @endif
 
         <section class="summary-grid">
             <article><span>Q {{ number_format($order['total'], 2) }}</span><p>Total</p></article>
             <article><span>Q {{ number_format($order['paid_amount'], 2) }}</span><p>Pagado</p></article>
-            <article><span>Q {{ number_format(max(0, $order['total'] - $order['paid_amount']), 2) }}</span><p>Saldo</p></article>
+            <article><span>Q {{ number_format($balance, 2) }}</span><p>Saldo</p></article>
         </section>
 
         <section class="panel form-panel">
@@ -45,18 +52,26 @@
         <section class="panel two-column">
             <div>
                 <div class="section-heading">
-                    <div><p class="eyebrow">Cobro</p><h2>Registrar abono</h2></div>
+                    <div>
+                        <p class="eyebrow">Cobro</p>
+                        <h2>{{ $balance > 0 ? 'Registrar abono' : 'Pago completo' }}</h2>
+                        <p>Saldo pendiente: Q {{ number_format($balance, 2) }}</p>
+                    </div>
                 </div>
-                <form class="inline-form" method="POST" action="{{ route('orders.pay', $order['id']) }}">
-                    @csrf
-                    <input name="amount" type="number" step="0.01" min="0.01" placeholder="Monto" required>
-                    <select name="method">
-                        <option value="efectivo">Efectivo</option>
-                        <option value="transferencia">Transferencia</option>
-                        <option value="tarjeta">Tarjeta</option>
-                    </select>
-                    <button class="button primary" type="submit" @disabled($order['status'] === 'cancelled')>Cobrar</button>
-                </form>
+                @if ($balance > 0)
+                    <form class="inline-form" method="POST" action="{{ route('orders.pay', $order['id']) }}">
+                        @csrf
+                        <input name="amount" type="number" step="0.01" min="0.01" max="{{ number_format($balance, 2, '.', '') }}" value="{{ number_format($balance, 2, '.', '') }}" placeholder="Monto" required>
+                        <select name="method">
+                            <option value="efectivo">Efectivo</option>
+                            <option value="transferencia">Transferencia</option>
+                            <option value="tarjeta">Tarjeta</option>
+                        </select>
+                        <button class="button primary" type="submit" @disabled($order['status'] === 'cancelled')>Cobrar saldo</button>
+                    </form>
+                @else
+                    <p class="empty-state">Esta orden ya no tiene saldo pendiente.</p>
+                @endif
             </div>
             <div>
                 <div class="section-heading">

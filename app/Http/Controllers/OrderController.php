@@ -135,23 +135,38 @@ class OrderController extends Controller
         $order = $this->orders->find($id);
         abort_if($order === null, 404);
 
+        if (($order['status'] ?? null) === 'cancelled') {
+            return back()->withErrors(['amount' => 'No se puede cobrar una orden anulada.']);
+        }
+
         $data = $request->validate([
             'amount' => ['required', 'numeric', 'min:0.01'],
             'method' => ['required', 'string', 'max:40'],
         ]);
 
-        $updated = $this->orders->addPayment($id, (float) $data['amount'], $data['method']);
+        $balance = max(0, round((float) $order['total'] - (float) $order['paid_amount'], 2));
+        $amount = round((float) $data['amount'], 2);
+
+        if ($balance <= 0) {
+            return back()->withErrors(['amount' => 'Esta orden ya esta pagada.']);
+        }
+
+        if ($amount > $balance) {
+            return back()->withErrors(['amount' => 'El abono no puede ser mayor al saldo pendiente de Q '.number_format($balance, 2).'.']);
+        }
+
+        $updated = $this->orders->addPayment($id, $amount, $data['method']);
 
         $movement = $this->cash->create([
             'type' => 'income',
             'date' => now()->toDateString(),
-            'amount' => (float) $data['amount'],
+            'amount' => $amount,
             'method' => $data['method'],
             'description' => 'Abono de orden '.$id.' - '.$order['patient_name'],
             'order_id' => $id,
             'source' => 'order_payment',
         ]);
-        $this->audit->record('order_payment_added', 'order', $id, ['amount' => $data['amount'], 'movement_id' => $movement['id']]);
+        $this->audit->record('order_payment_added', 'order', $id, ['amount' => $amount, 'movement_id' => $movement['id']]);
 
         return redirect()->route('orders.show', $id)->with('status', 'Pago registrado. Estado: '.$updated['payment_status']);
     }
