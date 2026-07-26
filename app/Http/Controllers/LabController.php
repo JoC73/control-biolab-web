@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Services\CatalogStore;
 use App\Services\AuditStore;
 use App\Services\LabResultStore;
+use App\Services\OrderStore;
 use Dompdf\Dompdf;
 use Dompdf\Options;
 use Illuminate\Http\Request;
@@ -17,6 +18,7 @@ class LabController extends Controller
         private readonly LabResultStore $results,
         private readonly CatalogStore $catalog,
         private readonly AuditStore $audit,
+        private readonly OrderStore $orders,
     )
     {
     }
@@ -67,6 +69,8 @@ class LabController extends Controller
 
     public function history(Request $request)
     {
+        $this->syncOrderResultsToHistory();
+
         return view('lab.history', [
             'business' => config('lab.business'),
             'results' => $this->results->search($request->only('q', 'date_from', 'date_to')),
@@ -167,6 +171,27 @@ class LabController extends Controller
     private function findCategory(string $category): ?array
     {
         return Arr::first($this->catalog->categories(), fn (array $item) => $item['slug'] === $category);
+    }
+
+    private function syncOrderResultsToHistory(): void
+    {
+        $this->orders->search()
+            ->filter(fn (array $order) => in_array($order['status'] ?? null, ['ready', 'delivered'], true))
+            ->filter(fn (array $order) => $this->orderHasAnyResult($order))
+            ->each(function (array $order) {
+                $archived = $this->results->findAny($order['id']);
+
+                if (($archived['deleted_at'] ?? null) || ($archived && ($archived['updated_at'] ?? '') >= ($order['updated_at'] ?? ''))) {
+                    return;
+                }
+
+                $this->results->saveFromOrder($order);
+            });
+    }
+
+    private function orderHasAnyResult(array $order): bool
+    {
+        return collect($order['results'] ?? [])->contains(fn ($value) => filled($value));
     }
 
     private function resultPayload(Request $request, string $category): array

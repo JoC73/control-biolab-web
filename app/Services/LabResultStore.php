@@ -58,6 +58,17 @@ class LabResultStore
         return $this->all()->firstWhere('id', $id);
     }
 
+    public function findAny(string $id): ?array
+    {
+        if ($this->usesDatabase()) {
+            $row = DB::table('saved_lab_results')->where('id', $id)->first();
+
+            return $row ? $this->fromRow($row) : null;
+        }
+
+        return collect($this->read())->firstWhere('id', $id);
+    }
+
     public function save(array $payload): array
     {
         $now = now()->toDateTimeString();
@@ -87,6 +98,60 @@ class LabResultStore
 
         $records = $this->read();
         $records[] = $record;
+        $this->write($records);
+
+        return $record;
+    }
+
+    public function saveFromOrder(array $order): array
+    {
+        $record = [
+            'id' => $order['id'],
+            'patient_name' => $order['patient_name'],
+            'age' => $order['age'] ?? '',
+            'referred_by' => $order['referrer'] ?? '',
+            'date' => $order['date'],
+            'category_slug' => $order['category_slug'],
+            'category_name' => $order['category_name'],
+            'category_title' => $order['category_title'],
+            'tests' => $order['tests'] ?? [],
+            'results' => $order['results'] ?? [],
+            'deleted_at' => null,
+            'deleted_by' => null,
+            'created_at' => $order['created_at'] ?? now()->toDateTimeString(),
+            'updated_at' => now()->toDateTimeString(),
+        ];
+
+        if ($this->usesDatabase()) {
+            DB::table('saved_lab_results')->updateOrInsert(
+                ['id' => $record['id']],
+                $this->toDatabase($record, false)
+            );
+
+            return $record;
+        }
+
+        $records = $this->read();
+        $updated = false;
+
+        foreach ($records as $index => $existing) {
+            if (($existing['id'] ?? null) !== $record['id']) {
+                continue;
+            }
+
+            $records[$index] = array_merge($existing, $record, [
+                'created_at' => $existing['created_at'] ?? $record['created_at'],
+                'deleted_at' => null,
+                'deleted_by' => null,
+            ]);
+            $updated = true;
+            break;
+        }
+
+        if (! $updated) {
+            $records[] = $record;
+        }
+
         $this->write($records);
 
         return $record;

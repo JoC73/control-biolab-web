@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Services\CashStore;
 use App\Services\CatalogStore;
 use App\Services\AuditStore;
+use App\Services\LabResultStore;
 use App\Services\OrderStore;
 use Dompdf\Dompdf;
 use Dompdf\Options;
@@ -19,6 +20,7 @@ class OrderController extends Controller
         private readonly CatalogStore $catalog,
         private readonly CashStore $cash,
         private readonly AuditStore $audit,
+        private readonly LabResultStore $results,
     ) {
     }
 
@@ -138,8 +140,13 @@ class OrderController extends Controller
             'status' => ['required', 'in:pending_results,ready'],
         ]);
 
-        $this->orders->updateResults($id, $data);
+        $updated = $this->orders->updateResults($id, $data);
         $this->audit->record('order_results_saved', 'order', $id, ['status' => $data['status']]);
+
+        if ($updated && ($updated['status'] ?? null) === 'ready') {
+            $record = $this->results->saveFromOrder($updated);
+            $this->audit->record('result_archived_from_order', 'result', $record['id'], ['order_id' => $id]);
+        }
 
         return redirect()->route('orders.show', $id)->with('status', 'Resultados guardados.');
     }
@@ -187,8 +194,13 @@ class OrderController extends Controller
 
     public function deliver(string $id)
     {
-        $this->orders->markDelivered($id);
+        $updated = $this->orders->markDelivered($id);
         $this->audit->record('order_delivered', 'order', $id);
+
+        if ($updated && $this->orderHasAnyResult($updated)) {
+            $record = $this->results->saveFromOrder($updated);
+            $this->audit->record('result_archived_on_delivery', 'result', $record['id'], ['order_id' => $id]);
+        }
 
         return redirect()->route('orders.show', $id)->with('status', 'Orden marcada como entregada.');
     }
@@ -260,6 +272,11 @@ class OrderController extends Controller
             'logoDataUri' => $this->assetDataUri(public_path('assets/biolab-logo-pdf.jpg'), 'image/jpeg'),
             'signatureDataUri' => $this->assetDataUri(public_path('assets/firma-biolab-pdf.jpg'), 'image/jpeg'),
         ];
+    }
+
+    private function orderHasAnyResult(array $order): bool
+    {
+        return collect($order['results'] ?? [])->contains(fn ($value) => filled($value));
     }
 
     private function pdfResponse(array $order, string $disposition)
