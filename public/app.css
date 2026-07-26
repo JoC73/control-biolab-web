@@ -1194,6 +1194,13 @@ button:disabled,
     gap: 8px;
 }
 
+.lab-board {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(320px, .85fr);
+    gap: 16px;
+    align-items: start;
+}
+
 .history-row {
     display: grid;
     grid-template-columns: 1fr auto;
@@ -1207,6 +1214,10 @@ button:disabled,
 
 .compact-list .history-row {
     grid-template-columns: 1fr;
+}
+
+.lab-queue-row {
+    grid-template-columns: minmax(0, 1fr) auto;
 }
 
 .history-row strong,
@@ -1383,6 +1394,7 @@ button:disabled,
 
     .filters,
     .history-row,
+    .lab-board,
     .two-column,
     .catalog-board,
     .exam-builder-head {

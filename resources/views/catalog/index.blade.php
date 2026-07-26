@@ -9,7 +9,7 @@
                 <p>Precios, medicos, instituciones y plantillas de examenes en una vista horizontal.</p>
             </div>
             <div class="top-actions">
-                <a class="button" href="{{ route('orders.create') }}">Nueva orden</a>
+                <a class="button" href="{{ route('orders.create') }}">Registrar cobro</a>
             </div>
         </header>
 

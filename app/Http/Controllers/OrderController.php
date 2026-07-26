@@ -30,6 +30,20 @@ class OrderController extends Controller
         ]);
     }
 
+    public function labQueue(Request $request)
+    {
+        $orders = $this->orders->search($request->only('q'))
+            ->where('status', 'pending_results')
+            ->values();
+
+        return view('orders.lab-queue', [
+            'readyOrders' => $orders->where('payment_status', 'paid')->values(),
+            'partialOrders' => $orders->where('payment_status', 'partial')->values(),
+            'unpaidOrders' => $orders->where('payment_status', 'unpaid')->values(),
+            'filters' => $request->only('q'),
+        ]);
+    }
+
     public function create()
     {
         return view('orders.create', [

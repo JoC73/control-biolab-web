@@ -5,10 +5,12 @@
         <header class="topbar compact">
             <div>
                 <p class="eyebrow">Operacion</p>
-                <h1>Ordenes de laboratorio</h1>
+                <h1>Ordenes y cobros</h1>
+                <p>Consulta las solicitudes registradas, su estado de pago y avance de resultados.</p>
             </div>
             <div class="top-actions">
-                <a class="button primary" href="{{ route('orders.create') }}">Nueva orden</a>
+                <a class="button" href="{{ route('orders.lab') }}">Laboratorio</a>
+                <a class="button primary" href="{{ route('orders.create') }}">Registrar cobro</a>
             </div>
         </header>
 

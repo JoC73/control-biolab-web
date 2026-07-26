@@ -14,6 +14,7 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 Route::middleware('biolab.auth')->group(function () {
     Route::get('/', [LabController::class, 'index'])->name('lab.index');
+    Route::get('/laboratorio', [OrderController::class, 'labQueue'])->middleware('biolab.role:admin,recepcion,laboratorio')->name('orders.lab');
     Route::get('/ordenes', [OrderController::class, 'index'])->name('orders.index');
     Route::get('/ordenes/nueva', [OrderController::class, 'create'])->middleware('biolab.role:recepcion,caja')->name('orders.create');
     Route::post('/ordenes', [OrderController::class, 'store'])->middleware('biolab.role:recepcion,caja')->name('orders.store');

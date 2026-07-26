@@ -19,8 +19,9 @@
 
             <nav class="side-nav" aria-label="Navegacion principal">
                 <a class="{{ request()->routeIs('lab.index') ? 'active' : '' }}" href="{{ route('lab.index') }}">Inicio</a>
-                <a class="{{ request()->routeIs('orders.create') ? 'active' : '' }}" href="{{ route('orders.create') }}">Nueva orden</a>
-                <a class="{{ request()->routeIs('orders.*') && ! request()->routeIs('orders.create') ? 'active' : '' }}" href="{{ route('orders.index') }}">Ordenes</a>
+                <a class="{{ request()->routeIs('orders.create') ? 'active' : '' }}" href="{{ route('orders.create') }}">Registrar cobro</a>
+                <a class="{{ request()->routeIs('orders.lab') || request()->routeIs('orders.results') ? 'active' : '' }}" href="{{ route('orders.lab') }}">Laboratorio</a>
+                <a class="{{ request()->routeIs('orders.*') && ! request()->routeIs('orders.create') && ! request()->routeIs('orders.lab') && ! request()->routeIs('orders.results') ? 'active' : '' }}" href="{{ route('orders.index') }}">Ordenes</a>
                 <a class="{{ request()->routeIs('cash.*') ? 'active' : '' }}" href="{{ route('cash.index') }}">Caja</a>
                 <a class="{{ request()->routeIs('catalog.*') ? 'active' : '' }}" href="{{ route('catalog.index') }}">Catalogos</a>
                 <a class="{{ request()->routeIs('lab.history') || request()->routeIs('lab.results.*') ? 'active' : '' }}" href="{{ route('lab.history') }}">Historial</a>
@@ -54,9 +55,9 @@
                 </a>
                 <nav class="mobile-nav" aria-label="Navegacion movil">
                     <a href="{{ route('lab.index') }}">Inicio</a>
-                    <a href="{{ route('orders.create') }}">Nueva</a>
+                    <a href="{{ route('orders.create') }}">Cobro</a>
+                    <a href="{{ route('orders.lab') }}">Lab</a>
                     <a href="{{ route('orders.index') }}">Ordenes</a>
-                    <a href="{{ route('cash.index') }}">Caja</a>
                 </nav>
             </header>
 

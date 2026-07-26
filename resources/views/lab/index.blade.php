@@ -9,7 +9,8 @@
                 <p>{{ $business['address'] }} · Tel. {{ $business['phone'] }}</p>
             </div>
             <div class="top-actions">
-                <a class="button primary" href="{{ route('orders.create') }}">Nueva orden</a>
+                <a class="button primary" href="{{ route('orders.create') }}">Registrar cobro</a>
+                <a class="button" href="{{ route('orders.lab') }}">Laboratorio</a>
                 <a class="button" href="{{ route('orders.index') }}">Ordenes</a>
             </div>
         </header>
@@ -20,12 +21,12 @@
 
         <section class="summary-grid">
             <article>
-                <span>Orden</span>
-                <p>Paciente, examen, referencia y estado</p>
+                <span>Cobro</span>
+                <p>Paciente, examen, precio, descuento y pago</p>
             </article>
             <article>
-                <span>Caja</span>
-                <p>Cobros, descuentos, egresos y anulaciones</p>
+                <span>Laboratorio</span>
+                <p>Pacientes listos para llenar resultados</p>
             </article>
             <article>
                 <span>Entrega</span>

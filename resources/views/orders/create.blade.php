@@ -1,4 +1,4 @@
-@extends('layouts.lab', ['title' => 'Nueva orden'])
+@extends('layouts.lab', ['title' => 'Registrar cobro'])
 
 @section('body')
     @php
@@ -15,12 +15,13 @@
     <main class="app-shell">
         <header class="topbar compact">
             <div>
-                <p class="eyebrow">Recepcion</p>
-                <h1>Nueva orden</h1>
+                <p class="eyebrow">Recepcion / Caja</p>
+                <h1>Registrar cobro de examen</h1>
+                <p>Registra al paciente, el examen solicitado y el pago inicial o total.</p>
             </div>
             <div class="top-actions">
                 <a class="button" href="{{ route('orders.index') }}">Ordenes</a>
-                <button class="button primary" type="submit" form="order-form">Guardar orden</button>
+                <button class="button primary" type="submit" form="order-form">Guardar cobro</button>
             </div>
         </header>
 
@@ -106,7 +107,7 @@
 
             <div class="actions">
                 <a class="button" href="{{ route('orders.index') }}">Cancelar</a>
-                <button class="button primary" type="submit">Guardar orden</button>
+                <button class="button primary" type="submit">Guardar cobro</button>
             </div>
         </form>
     </main>
