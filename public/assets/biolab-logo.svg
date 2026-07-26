@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 120" role="img" aria-labelledby="title desc">
+  <title id="title">BIOLAB microscope logo</title>
+  <desc id="desc">Stylized laboratory microscope for BIOLAB.</desc>
+  <rect width="160" height="120" rx="10" fill="#ffffff"/>
+  <g fill="none" stroke="#17213d" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M38 91h82" stroke-width="9"/>
+    <path d="M52 78h44" stroke-width="9"/>
+    <path d="M62 75c-10-11-11-27 1-39" stroke-width="10"/>
+    <path d="M47 24l48 30" stroke-width="14"/>
+    <path d="M40 19l18 11" stroke-width="9"/>
+    <path d="M92 65l25-19" stroke-width="6"/>
+    <path d="M70 42l-11 20" stroke-width="6"/>
+  </g>
+  <circle cx="111" cy="36" r="5" fill="#17213d"/>
+</svg>

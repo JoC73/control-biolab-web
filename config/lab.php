@@ -1,0 +1,112 @@
+<?php
+
+return [
+    'business' => [
+        'name' => 'Laboratorio Biologico BIOLAB',
+        'address' => 'Entrada Principal Aldea Chocola, San Pablo Jocopilas, Suchitepequez',
+        'phone' => '4171-6435',
+        'director' => 'Enna Guisela Merlos Rodas',
+        'credential' => 'Quimico Biologo - Colegiado 4571',
+    ],
+
+    'referrers' => [
+        'DR. SUHUL',
+        'DR. GARCIA',
+        'DR. MENCHU',
+        'DR. DUBON',
+        'DRA. CONTRERAS',
+        'DRA. ESTRADA',
+        'CENTRO DE SALUD',
+        'FARMACIA SHADAY',
+        'PRESENTE',
+        'DR. IXCOT',
+        'DRA. MANSILLA',
+    ],
+
+    'categories' => [
+        [
+            'slug' => 'hematologia',
+            'name' => 'Hematologia',
+            'title' => 'Hematologia completa',
+            'tests' => [
+                ['name' => 'Recuento de globulos blancos', 'unit' => 'Cel/mm3', 'reference' => '5000-10000'],
+                ['name' => 'Recuento de globulos rojos', 'unit' => 'mil/mm3', 'reference' => '3.80-5.60'],
+                ['name' => 'Hemoglobina', 'unit' => 'g/dL', 'reference' => '12.0-17.0'],
+                ['name' => 'Hematocrito', 'unit' => '%', 'reference' => '36-52'],
+                ['name' => 'Plaquetas', 'unit' => 'Cel/mm3', 'reference' => '150000-450000'],
+            ],
+        ],
+        [
+            'slug' => 'orina',
+            'name' => 'Orina',
+            'title' => 'Uroanalisis',
+            'tests' => [
+                ['name' => 'Color', 'unit' => '', 'reference' => 'Amarillo'],
+                ['name' => 'Aspecto', 'unit' => '', 'reference' => 'Claro'],
+                ['name' => 'Densidad', 'unit' => '', 'reference' => '1.005-1.030'],
+                ['name' => 'pH', 'unit' => '', 'reference' => '5.0-8.0'],
+                ['name' => 'Proteinas', 'unit' => '', 'reference' => 'Negativo'],
+            ],
+        ],
+        [
+            'slug' => 'heces',
+            'name' => 'Heces',
+            'title' => 'Examen de heces',
+            'tests' => [
+                ['name' => 'Color', 'unit' => '', 'reference' => 'Cafe'],
+                ['name' => 'Consistencia', 'unit' => '', 'reference' => 'Blanda'],
+                ['name' => 'Moco', 'unit' => '', 'reference' => 'Negativo'],
+                ['name' => 'Sangre oculta', 'unit' => '', 'reference' => 'Negativo'],
+                ['name' => 'Parasitos', 'unit' => '', 'reference' => 'No se observan'],
+            ],
+        ],
+        [
+            'slug' => 'lipidos',
+            'name' => 'Lipidos',
+            'title' => 'Perfil de lipidos',
+            'tests' => [
+                ['name' => 'Colesterol total', 'unit' => 'mg/dL', 'reference' => '< 200'],
+                ['name' => 'Trigliceridos', 'unit' => 'mg/dL', 'reference' => '< 150'],
+                ['name' => 'HDL colesterol', 'unit' => 'mg/dL', 'reference' => '> 40'],
+                ['name' => 'LDL colesterol', 'unit' => 'mg/dL', 'reference' => '< 100'],
+            ],
+        ],
+        [
+            'slug' => 'renales',
+            'name' => 'Renales',
+            'title' => 'Pruebas renales',
+            'tests' => [
+                ['name' => 'Glucosa', 'unit' => 'mg/dL', 'reference' => '70-110'],
+                ['name' => 'Urea', 'unit' => 'mg/dL', 'reference' => '10-50'],
+                ['name' => 'Creatinina', 'unit' => 'mg/dL', 'reference' => '0.6-1.3'],
+                ['name' => 'Acido urico', 'unit' => 'mg/dL', 'reference' => '2.5-7.0'],
+            ],
+        ],
+        [
+            'slug' => 'hepaticas',
+            'name' => 'Hepaticas',
+            'title' => 'Pruebas hepaticas',
+            'tests' => [
+                ['name' => 'TGO/AST', 'unit' => 'U/L', 'reference' => '0-40'],
+                ['name' => 'TGP/ALT', 'unit' => 'U/L', 'reference' => '0-40'],
+                ['name' => 'Bilirrubina total', 'unit' => 'mg/dL', 'reference' => '0.2-1.2'],
+                ['name' => 'Fosfatasa alcalina', 'unit' => 'U/L', 'reference' => '40-129'],
+            ],
+        ],
+        ['slug' => 'serologia', 'name' => 'Serologia', 'title' => 'Serologia', 'tests' => []],
+        ['slug' => 'hormonas', 'name' => 'Hormonas', 'title' => 'Hormonas', 'tests' => []],
+        ['slug' => 'coagulacion', 'name' => 'Coagulacion', 'title' => 'Coagulacion', 'tests' => []],
+        ['slug' => 'bacterologia', 'name' => 'Bacteriologia', 'title' => 'Bacteriologia', 'tests' => []],
+        ['slug' => 'micologia', 'name' => 'Micologia', 'title' => 'Micologia', 'tests' => []],
+        ['slug' => 'inmunoglobina', 'name' => 'Inmunoglobulinas', 'title' => 'Inmunoglobulinas', 'tests' => []],
+        ['slug' => 'enfermedades-infecciosas', 'name' => 'Enfermedades infecciosas', 'title' => 'Enfermedades infecciosas', 'tests' => []],
+        ['slug' => 'inmunohematologia', 'name' => 'Inmunohematologia', 'title' => 'Inmunohematologia', 'tests' => []],
+        ['slug' => 'metabolismo', 'name' => 'Metabolismo', 'title' => 'Metabolismo', 'tests' => []],
+        ['slug' => 'pancreaticas', 'name' => 'Pancreaticas', 'title' => 'Pancreaticas', 'tests' => []],
+        ['slug' => 'cardiacas', 'name' => 'Cardiacas', 'title' => 'Cardiacas', 'tests' => []],
+        ['slug' => 'prostatica', 'name' => 'Prostaticas', 'title' => 'Prostaticas', 'tests' => []],
+        ['slug' => 'electrolitos', 'name' => 'Electrolitos', 'title' => 'Electrolitos', 'tests' => []],
+        ['slug' => 'marcadores-tumorales', 'name' => 'Marcadores tumorales', 'title' => 'Marcadores tumorales', 'tests' => []],
+        ['slug' => 'otros', 'name' => 'Otros', 'title' => 'Otros analisis', 'tests' => []],
+    ],
+];
