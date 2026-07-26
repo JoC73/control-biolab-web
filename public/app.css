@@ -519,6 +519,81 @@ button,
     font-size: .82rem;
 }
 
+.reference-list {
+    display: grid;
+    gap: 8px;
+    max-height: 342px;
+    overflow-y: auto;
+    padding-right: 6px;
+    scrollbar-color: #9ab7c5 #eef5f7;
+    scrollbar-width: thin;
+}
+
+.reference-list::-webkit-scrollbar {
+    width: 10px;
+}
+
+.reference-list::-webkit-scrollbar-track {
+    border-radius: 999px;
+    background: #eef5f7;
+}
+
+.reference-list::-webkit-scrollbar-thumb {
+    border: 2px solid #eef5f7;
+    border-radius: 999px;
+    background: #9ab7c5;
+}
+
+.reference-record {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 12px;
+    min-height: 58px;
+    padding: 11px 12px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #fff;
+    transition: border-color .15s ease, background-color .15s ease, transform .15s ease;
+}
+
+.reference-record:hover {
+    border-color: #9cc8d8;
+    background: #f8fcfd;
+    transform: translateY(-1px);
+}
+
+.reference-record strong,
+.reference-record span {
+    display: block;
+}
+
+.reference-record strong {
+    font-size: .92rem;
+    line-height: 1.2;
+}
+
+.reference-record span {
+    margin-top: 3px;
+    color: var(--muted);
+    font-size: .82rem;
+}
+
+.reference-type {
+    min-width: 46px;
+    min-height: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 0 !important;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--soft);
+    color: #1b5b48 !important;
+    font-size: .75rem !important;
+    font-weight: 900;
+}
+
 .catalog-table {
     display: grid;
     grid-template-columns: minmax(170px, 1.4fr) 90px 70px 108px 112px;
@@ -1328,6 +1403,16 @@ button:disabled,
 
     .horizontal-list {
         min-height: 0;
+    }
+
+    .reference-list {
+        max-height: 260px;
+        padding-right: 4px;
+    }
+
+    .reference-record {
+        min-height: 54px;
+        padding: 10px;
     }
 
     .catalog-table-head,

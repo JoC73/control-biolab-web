@@ -35,11 +35,14 @@
 
                 <input class="catalog-search" type="search" placeholder="Buscar referencia..." data-catalog-filter="referrer-list">
 
-                <div class="horizontal-list" id="referrer-list">
+                <div class="reference-list" id="referrer-list" aria-label="Listado de medicos e instituciones">
                     @foreach ($referrers as $referrer)
-                        <article class="mini-record" data-filter-item>
-                            <strong>{{ $referrer }}</strong>
-                            <span>{{ str_contains($referrer, 'CENTRO') || str_contains($referrer, 'FARMACIA') ? 'Institucion' : 'Medico' }}</span>
+                        <article class="reference-record" data-filter-item>
+                            <div>
+                                <strong>{{ $referrer }}</strong>
+                                <span>{{ str_contains($referrer, 'CENTRO') || str_contains($referrer, 'FARMACIA') ? 'Institucion' : 'Medico' }}</span>
+                            </div>
+                            <span class="reference-type">{{ str_contains($referrer, 'CENTRO') || str_contains($referrer, 'FARMACIA') ? 'Inst.' : 'Med.' }}</span>
                         </article>
                     @endforeach
                 </div>
