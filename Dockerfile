@@ -28,4 +28,4 @@ ENV QUEUE_CONNECTION=sync
 
 EXPOSE 10000
 
-CMD ["sh", "-c", "php artisan migrate --force && php artisan config:cache && php artisan route:cache && php artisan view:cache && php artisan serve --host=0.0.0.0 --port=${PORT:-10000}"]
+CMD ["sh", "-c", "APP_PORT=$(printf '%s' \"${PORT:-10000}\" | sed 's/[^0-9].*$//'); [ -z \"$APP_PORT\" ] && APP_PORT=10000; php artisan migrate --force && php artisan config:cache && php artisan route:cache && php artisan view:cache && php -S 0.0.0.0:$APP_PORT -t public public/index.php"]
