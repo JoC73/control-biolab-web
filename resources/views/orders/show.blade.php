@@ -61,7 +61,8 @@
                 @if ($balance > 0)
                     <form class="inline-form" method="POST" action="{{ route('orders.pay', $order['id']) }}">
                         @csrf
-                        <input name="amount" type="number" step="0.01" min="0.01" max="{{ number_format($balance, 2, '.', '') }}" value="{{ number_format($balance, 2, '.', '') }}" placeholder="Monto" required>
+                        <input name="amount" type="hidden" value="{{ number_format($balance, 2, '.', '') }}">
+                        <input type="text" value="Q {{ number_format($balance, 2) }}" readonly aria-label="Saldo pendiente a cobrar">
                         <select name="method">
                             <option value="efectivo">Efectivo</option>
                             <option value="transferencia">Transferencia</option>

@@ -165,8 +165,8 @@ class OrderController extends Controller
             return back()->withErrors(['amount' => 'Esta orden ya esta pagada.']);
         }
 
-        if ($amount > $balance) {
-            return back()->withErrors(['amount' => 'El abono no puede ser mayor al saldo pendiente de Q '.number_format($balance, 2).'.']);
+        if ($amount !== $balance) {
+            return back()->withErrors(['amount' => 'El cobro debe ser exactamente el saldo pendiente de Q '.number_format($balance, 2).'.']);
         }
 
         $updated = $this->orders->addPayment($id, $amount, $data['method']);
