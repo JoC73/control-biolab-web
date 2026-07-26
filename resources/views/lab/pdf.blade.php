@@ -256,10 +256,5 @@
         <p>Horarios: Lunes a Viernes 7:00 a 19:00 horas Sabados 7:00 a 17:00 horas</p>
         <strong>DOMINGOS SOLO EMERGENCIAS</strong>
     </footer>
-    @if ($autoPrint ?? false)
-        <script>
-            window.addEventListener('load', () => window.print());
-        </script>
-    @endif
 </body>
 </html>

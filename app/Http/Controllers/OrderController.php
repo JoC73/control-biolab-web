@@ -228,18 +228,7 @@ class OrderController extends Controller
         $order = $this->orders->find($id);
         abort_if($order === null, 404);
 
-        $html = view('orders.pdf', $this->reportPayload($order))->render();
-        $options = new Options();
-        $options->set('defaultFont', 'DejaVu Sans');
-        $pdf = new Dompdf($options);
-        $pdf->setPaper('letter');
-        $pdf->loadHtml($html, 'UTF-8');
-        $pdf->render();
-
-        return response($pdf->output(), 200, [
-            'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'attachment; filename="orden-'.$id.'-'.Str::slug($order['patient_name']).'.pdf"',
-        ]);
+        return $this->pdfResponse($order, 'attachment');
     }
 
     public function print(string $id)
@@ -247,7 +236,7 @@ class OrderController extends Controller
         $order = $this->orders->find($id);
         abort_if($order === null, 404);
 
-        return view('orders.pdf', $this->reportPayload($order) + ['autoPrint' => true]);
+        return $this->pdfResponse($order, 'inline');
     }
 
     private function category(string $slug): ?array
@@ -271,6 +260,22 @@ class OrderController extends Controller
             'logoDataUri' => $this->assetDataUri(public_path('assets/biolab-logo-pdf.jpg'), 'image/jpeg'),
             'signatureDataUri' => $this->assetDataUri(public_path('assets/firma-biolab-pdf.jpg'), 'image/jpeg'),
         ];
+    }
+
+    private function pdfResponse(array $order, string $disposition)
+    {
+        $html = view('orders.pdf', $this->reportPayload($order))->render();
+        $options = new Options();
+        $options->set('defaultFont', 'DejaVu Sans');
+        $pdf = new Dompdf($options);
+        $pdf->setPaper('letter');
+        $pdf->loadHtml($html, 'UTF-8');
+        $pdf->render();
+
+        return response($pdf->output(), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => $disposition.'; filename="orden-'.$order['id'].'-'.Str::slug($order['patient_name']).'.pdf"',
+        ]);
     }
 
     private function assetDataUri(string $path, string $mime): string
