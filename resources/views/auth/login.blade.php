@@ -7,36 +7,40 @@
     <link rel="stylesheet" href="{{ asset('app.css') }}?v={{ filemtime(public_path('app.css')) }}">
 </head>
 <body class="login-body">
-    <main class="login-shell">
-        <section class="login-card">
-            <div class="brand-block login-brand">
-                @include('components.biolab-logo', ['class' => 'brand-logo'])
-                <span>
-                    <strong>BIOLAB</strong>
-                    <small>Control laboratorio</small>
-                </span>
+    <main class="login-shell" aria-labelledby="login-title">
+        <section class="login-hero" aria-label="Laboratorio Biologico BIOLAB">
+            <div class="login-logo-mark">
+                @include('components.biolab-logo', ['class' => 'login-logo'])
             </div>
             <div>
+                <p class="eyebrow">Control de resultados</p>
+                <h1>Laboratorio Biologico BIOLAB</h1>
+                <p>Ordenes, caja, resultados y catalogos en un flujo seguro.</p>
+            </div>
+        </section>
+
+        <section class="login-card">
+            <div class="login-heading">
                 <p class="eyebrow">Acceso seguro</p>
-                <h1>Ingresar al sistema</h1>
-                <p>Usa tu usuario asignado para registrar ordenes, caja y resultados.</p>
+                <h2 id="login-title">Ingresar al sistema</h2>
+                <p>Usa las credenciales asignadas por administracion.</p>
             </div>
 
             @if ($errors->any())
-                <div class="status-message error-message">{{ $errors->first() }}</div>
+                <div class="status-message error-message login-error">{{ $errors->first() }}</div>
             @endif
 
             <form method="POST" action="{{ route('login.store') }}" class="login-form">
                 @csrf
                 <div class="field">
                     <label for="email">Correo</label>
-                    <input id="email" name="email" type="email" value="{{ old('email', 'admin@biolab.local') }}" required autofocus>
+                    <input id="email" name="email" type="email" value="{{ old('email') }}" autocomplete="username" required autofocus>
                 </div>
                 <div class="field">
                     <label for="password">Contrasena</label>
-                    <input id="password" name="password" type="password" required>
+                    <input id="password" name="password" type="password" autocomplete="current-password" required>
                 </div>
-                <button class="button primary" type="submit">Ingresar</button>
+                <button class="button primary login-submit" type="submit">Ingresar</button>
             </form>
         </section>
     </main>
