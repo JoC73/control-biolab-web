@@ -11,4 +11,4 @@ php artisan config:cache
 php artisan route:cache
 php artisan view:cache
 
-exec php -S 0.0.0.0:"$APP_PORT" -t public public/index.php
+exec php -S 0.0.0.0:"$APP_PORT" -t public railway/router.php
