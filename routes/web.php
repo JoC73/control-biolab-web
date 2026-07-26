@@ -26,6 +26,7 @@ Route::middleware('biolab.auth')->group(function () {
     Route::post('/ordenes/{id}/entregar', [OrderController::class, 'deliver'])->middleware('biolab.role:recepcion,laboratorio')->name('orders.deliver');
     Route::post('/ordenes/{id}/anular', [OrderController::class, 'cancel'])->middleware('biolab.role:admin,caja')->name('orders.cancel');
     Route::get('/ordenes/{id}/pdf', [OrderController::class, 'pdf'])->name('orders.pdf');
+    Route::get('/ordenes/{id}/imprimir', [OrderController::class, 'print'])->name('orders.print');
     Route::get('/caja', [CashController::class, 'index'])->middleware('biolab.role:caja,recepcion')->name('cash.index');
     Route::post('/caja', [CashController::class, 'store'])->middleware('biolab.role:caja')->name('cash.store');
     Route::post('/caja/{id}/anular', [CashController::class, 'void'])->middleware('biolab.role:admin,caja')->name('cash.void');

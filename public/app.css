@@ -954,7 +954,11 @@ small {
     align-items: center;
     justify-content: center;
     gap: 34px;
-    margin-bottom: 7px;
+    margin-bottom: 2px;
+}
+
+.report-footer p {
+    margin: 0 0 2px;
 }
 
 .mini-stamp {

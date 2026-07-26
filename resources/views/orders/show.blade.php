@@ -25,7 +25,7 @@
                 @if (!empty($order['phone']))
                     <a class="button" target="_blank" href="{{ $whatsappUrl }}">WhatsApp</a>
                 @endif
-                <button class="button primary" onclick="window.print()">Imprimir</button>
+                <a class="button primary" target="_blank" href="{{ route('orders.print', $order['id']) }}">Imprimir</a>
             </div>
         </header>
 

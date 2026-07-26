@@ -228,12 +228,7 @@ class OrderController extends Controller
         $order = $this->orders->find($id);
         abort_if($order === null, 404);
 
-        $html = view('orders.pdf', [
-            'order' => $order,
-            'business' => config('lab.business'),
-            'logoDataUri' => $this->assetDataUri(public_path('assets/biolab-logo-pdf.jpg'), 'image/jpeg'),
-            'signatureDataUri' => $this->assetDataUri(public_path('assets/firma-biolab-pdf.jpg'), 'image/jpeg'),
-        ])->render();
+        $html = view('orders.pdf', $this->reportPayload($order))->render();
         $options = new Options();
         $options->set('defaultFont', 'DejaVu Sans');
         $pdf = new Dompdf($options);
@@ -247,6 +242,14 @@ class OrderController extends Controller
         ]);
     }
 
+    public function print(string $id)
+    {
+        $order = $this->orders->find($id);
+        abort_if($order === null, 404);
+
+        return view('orders.pdf', $this->reportPayload($order) + ['autoPrint' => true]);
+    }
+
     private function category(string $slug): ?array
     {
         return Arr::first($this->catalog->categories(), fn (array $category) => $category['slug'] === $slug);
@@ -258,6 +261,16 @@ class OrderController extends Controller
         $message = 'Hola '.$order['patient_name'].', sus resultados de Laboratorio BIOLAB estan listos. Puede pasar por ellos o solicitar el PDF.';
 
         return 'https://wa.me/'.$phone.'?text='.rawurlencode($message);
+    }
+
+    private function reportPayload(array $order): array
+    {
+        return [
+            'order' => $order,
+            'business' => config('lab.business'),
+            'logoDataUri' => $this->assetDataUri(public_path('assets/biolab-logo-pdf.jpg'), 'image/jpeg'),
+            'signatureDataUri' => $this->assetDataUri(public_path('assets/firma-biolab-pdf.jpg'), 'image/jpeg'),
+        ];
     }
 
     private function assetDataUri(string $path, string $mime): string
