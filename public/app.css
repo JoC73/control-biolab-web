@@ -1243,6 +1243,38 @@ button:disabled,
     gap: 14px;
 }
 
+.user-permission-list {
+    display: grid;
+    gap: 12px;
+}
+
+.user-permission-card {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(250px, 320px);
+    gap: 16px;
+    align-items: center;
+    padding: 14px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #fff;
+}
+
+.user-permission-card strong,
+.user-permission-card span {
+    display: block;
+}
+
+.user-permission-card > form {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 8px;
+    align-items: end;
+}
+
+.user-permission-card > form label {
+    grid-column: 1 / -1;
+}
+
 .cash-table {
     display: grid;
     grid-template-columns: 112px 102px minmax(260px, 1.8fr) 116px 110px 98px minmax(210px, 1.2fr);
@@ -1395,6 +1427,7 @@ button:disabled,
     .filters,
     .history-row,
     .lab-board,
+    .user-permission-card,
     .two-column,
     .catalog-board,
     .exam-builder-head {
@@ -1461,8 +1494,14 @@ button:disabled,
 
     .filter-actions,
     .row-tools,
+    .user-permission-card > form,
     .inline-form {
         flex-direction: column;
+    }
+
+    .user-permission-card > form {
+        display: grid;
+        grid-template-columns: 1fr;
     }
 
     .inline-form input,

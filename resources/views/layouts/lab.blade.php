@@ -26,6 +26,7 @@
                 <a class="{{ request()->routeIs('catalog.*') ? 'active' : '' }}" href="{{ route('catalog.index') }}">Catalogos</a>
                 <a class="{{ request()->routeIs('lab.history') || request()->routeIs('lab.results.*') ? 'active' : '' }}" href="{{ route('lab.history') }}">Historial</a>
                 @if (session('biolab_user.role') === 'admin')
+                    <a class="{{ request()->routeIs('admin.users.*') ? 'active' : '' }}" href="{{ route('admin.users.index') }}">Usuarios</a>
                     <a class="{{ request()->routeIs('audit.*') ? 'active' : '' }}" href="{{ route('audit.index') }}">Auditoria</a>
                 @endif
             </nav>

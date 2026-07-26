@@ -6,6 +6,7 @@ use App\Http\Controllers\LabController;
 use App\Http\Controllers\CashController;
 use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\UserPermissionController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
@@ -35,6 +36,8 @@ Route::middleware('biolab.auth')->group(function () {
     Route::delete('/catalogos/examenes/{slug}', [CatalogController::class, 'deleteExam'])->middleware('biolab.role:admin')->name('catalog.exam.delete');
     Route::get('/historial', [LabController::class, 'history'])->name('lab.history');
     Route::get('/auditoria', [AuditController::class, 'index'])->middleware('biolab.role:admin')->name('audit.index');
+    Route::get('/admin/usuarios', [UserPermissionController::class, 'index'])->middleware('biolab.role:admin')->name('admin.users.index');
+    Route::put('/admin/usuarios/{email}', [UserPermissionController::class, 'update'])->middleware('biolab.role:admin')->name('admin.users.update');
     Route::get('/resultados/{category}/nuevo', [LabController::class, 'create'])->middleware('biolab.role:laboratorio')->name('lab.results.create');
     Route::post('/resultados/{category}/vista-previa', [LabController::class, 'preview'])->middleware('biolab.role:laboratorio')->name('lab.results.preview');
     Route::post('/resultados/{category}/guardar', [LabController::class, 'save'])->middleware('biolab.role:laboratorio')->name('lab.results.save');
