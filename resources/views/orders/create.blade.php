@@ -4,8 +4,10 @@
     @php
         $selectedCategory = old('category_slug', $categories[0]['slug'] ?? '');
         $initialPrice = (float) old('price', $prices[$selectedCategory] ?? $prices[$categories[0]['slug']] ?? 0);
-        $initialDiscount = (float) old('discount', 0);
-        $initialPaid = (float) old('paid_amount', 0);
+        $initialDiscountValue = old('discount');
+        $initialPaidValue = old('paid_amount');
+        $initialDiscount = (float) ($initialDiscountValue ?? 0);
+        $initialPaid = (float) ($initialPaidValue ?? 0);
         $initialTotal = max(0, round($initialPrice - $initialDiscount, 2));
         $initialBalance = max(0, round($initialTotal - $initialPaid, 2));
     @endphp
@@ -67,15 +69,15 @@
             <section class="panel form-panel">
                 <div class="field">
                     <label for="price">Precio</label>
-                    <input id="price" name="price" type="number" step="0.01" min="0" value="{{ number_format($initialPrice, 2, '.', '') }}" required data-price>
+                    <input id="price" name="price" type="number" step="0.01" min="0" value="{{ $initialPrice > 0 ? number_format($initialPrice, 2, '.', '') : '' }}" placeholder="0.00" required data-price data-money-input>
                 </div>
                 <div class="field">
                     <label for="discount">Descuento</label>
-                    <input id="discount" name="discount" type="number" step="0.01" min="0" value="{{ number_format($initialDiscount, 2, '.', '') }}" data-discount>
+                    <input id="discount" name="discount" type="number" step="0.01" min="0" value="{{ $initialDiscountValue !== null ? $initialDiscountValue : '' }}" placeholder="0.00" data-discount data-money-input>
                 </div>
                 <div class="field">
                     <label for="paid_amount">Pago inicial</label>
-                    <input id="paid_amount" name="paid_amount" type="number" step="0.01" min="0" max="{{ number_format($initialTotal, 2, '.', '') }}" value="{{ number_format($initialPaid, 2, '.', '') }}" data-paid>
+                    <input id="paid_amount" name="paid_amount" type="number" step="0.01" min="0" max="{{ number_format($initialTotal, 2, '.', '') }}" value="{{ $initialPaidValue !== null ? $initialPaidValue : '' }}" placeholder="0.00" data-paid data-money-input>
                 </div>
                 <div class="field">
                     <label for="payment_method">Forma de pago</label>
@@ -119,25 +121,35 @@
             const balance = document.querySelector('[data-balance]');
             if (!exam || !price || !discount || !paid || !total || !balance) return;
 
+            const numericValue = (field) => Number.parseFloat(String(field.value || '').replace(',', '.')) || 0;
             const update = () => {
-                const netTotal = Math.max(0, (parseFloat(price.value) || 0) - (parseFloat(discount.value) || 0));
-                const paidAmount = Math.max(0, parseFloat(paid.value) || 0);
+                const netTotal = Math.max(0, numericValue(price) - numericValue(discount));
+                const paidAmount = Math.max(0, numericValue(paid));
 
                 total.value = netTotal.toFixed(2);
                 balance.value = Math.max(0, netTotal - paidAmount).toFixed(2);
                 paid.max = netTotal.toFixed(2);
             };
+            const scheduleUpdate = () => {
+                update();
+                requestAnimationFrame(update);
+                setTimeout(update, 50);
+                setTimeout(update, 250);
+            };
             exam.addEventListener('change', () => {
                 price.value = exam.selectedOptions[0].dataset.price || 0;
-                update();
+                scheduleUpdate();
             });
             [price, discount, paid].forEach((field) => {
-                field.addEventListener('input', update);
-                field.addEventListener('change', update);
-                field.addEventListener('keyup', update);
+                field.addEventListener('focus', () => field.select());
+                field.addEventListener('input', scheduleUpdate);
+                field.addEventListener('change', scheduleUpdate);
+                field.addEventListener('keyup', scheduleUpdate);
             });
-            window.addEventListener('load', update);
-            update();
+            window.addEventListener('load', scheduleUpdate);
+            window.addEventListener('pageshow', scheduleUpdate);
+            document.addEventListener('visibilitychange', scheduleUpdate);
+            scheduleUpdate();
         })();
     </script>
 @endsection
