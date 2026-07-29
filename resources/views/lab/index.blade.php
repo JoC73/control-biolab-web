@@ -64,9 +64,12 @@
                 </div>
             </div>
 
-            @include('catalog.partials.exam-builder', ['embedded' => true])
-
             <div class="category-grid">
+                @if (in_array(session('biolab_user.role'), ['admin', 'laboratorio'], true))
+                    <a class="category-card category-create" href="{{ route('catalog.exam.create') }}">
+                        <strong>Crear examen personalizado</strong>
+                    </a>
+                @endif
                 @foreach ($categories as $category)
                     <a class="category-card category-{{ $category['slug'] }}" href="{{ route('lab.results.create', $category['slug']) }}">
                         <strong>{{ $category['name'] }}</strong>

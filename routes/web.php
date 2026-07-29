@@ -32,6 +32,7 @@ Route::middleware('biolab.auth')->group(function () {
     Route::post('/caja', [CashController::class, 'store'])->middleware('biolab.permission:cash.manage')->name('cash.store');
     Route::post('/caja/{id}/anular', [CashController::class, 'void'])->middleware('biolab.permission:cash.manage')->name('cash.void');
     Route::get('/catalogos', [CatalogController::class, 'index'])->middleware('biolab.permission:catalogs.view')->name('catalog.index');
+    Route::get('/catalogos/examenes/nuevo', [CatalogController::class, 'createExam'])->middleware('biolab.permission:catalogs.manage')->name('catalog.exam.create');
     Route::post('/catalogos/referencias', [CatalogController::class, 'referrer'])->middleware('biolab.permission:catalogs.view,catalogs.manage')->name('catalog.referrer');
     Route::post('/catalogos/precios', [CatalogController::class, 'price'])->middleware('biolab.permission:catalogs.manage')->name('catalog.price');
     Route::post('/catalogos/examenes', [CatalogController::class, 'exam'])->middleware('biolab.permission:catalogs.manage')->name('catalog.exam');

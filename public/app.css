@@ -306,6 +306,7 @@ a {
     font-size: .92rem;
 }
 
+.category-create { background: linear-gradient(135deg, #111827, #0f6597); }
 .category-hematologia { background: linear-gradient(135deg, #0f6597, #0b4f78); }
 .category-orina { background: linear-gradient(135deg, #16846c, #0f6654); }
 .category-heces { background: linear-gradient(135deg, #8b5b08, #6f4705); }
@@ -481,25 +482,6 @@ button,
     display: grid;
     gap: 14px;
     min-width: 0;
-}
-
-.exam-builder-inline {
-    display: grid;
-    gap: 14px;
-    margin-bottom: 18px;
-    padding: 16px;
-    border: 1px solid #c9dde5;
-    border-radius: 8px;
-    background: linear-gradient(180deg, #f8fcfd 0%, #ffffff 100%);
-}
-
-.exam-builder-inline .section-heading {
-    margin-bottom: 0;
-}
-
-.exam-builder-inline h2 {
-    font-size: 1.35rem;
-    line-height: 1.15;
 }
 
 .catalog-strip-wide {

@@ -22,6 +22,11 @@ class CatalogController extends Controller
         ]);
     }
 
+    public function createExam()
+    {
+        return view('catalog.exam-create');
+    }
+
     public function referrer(Request $request)
     {
         $data = $request->validate(['name' => ['required', 'string', 'max:120']]);
