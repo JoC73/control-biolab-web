@@ -153,6 +153,18 @@ class BiolabCriticalFlowTest extends TestCase
         $this->assertCount(1, app(CashStore::class)->all());
     }
 
+    public function test_create_order_view_keeps_exam_prices_separate_from_subtotal_field(): void
+    {
+        $this->seedExamPrices();
+
+        $this->actingAsBiolab('recepcion')
+            ->get('/ordenes/nueva')
+            ->assertOk()
+            ->assertSee('data-subtotal', false)
+            ->assertSee('data-exam-price="75"', false)
+            ->assertDontSee('data-price', false);
+    }
+
     public function test_multi_exam_order_rejects_duplicates_and_manipulated_prices(): void
     {
         $this->seedExamPrices();

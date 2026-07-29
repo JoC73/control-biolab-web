@@ -83,7 +83,7 @@
                     @foreach ($categories as $category)
                         @php $examPrice = (float) ($prices[$category['slug']] ?? 0); @endphp
                         <label class="exam-option-card">
-                            <input class="exam-checkbox" type="checkbox" name="exam_slugs[]" value="{{ $category['slug'] }}" data-exam-option data-price="{{ $examPrice }}" data-exam-label="{{ $category['name'] }}" @checked(in_array($category['slug'], $selectedExamSlugs, true))>
+                            <input class="exam-checkbox" type="checkbox" name="exam_slugs[]" value="{{ $category['slug'] }}" data-exam-option data-exam-price="{{ $examPrice }}" data-exam-label="{{ $category['name'] }}" @checked(in_array($category['slug'], $selectedExamSlugs, true))>
                             <input type="hidden" name="exam_prices[{{ $category['slug'] }}]" value="{{ number_format($examPrice, 2, '.', '') }}">
                             <span class="exam-option-main">
                                 <strong>{{ $category['name'] }}</strong>
@@ -98,7 +98,7 @@
             <section class="panel form-panel">
                 <div class="field">
                     <label for="price">Subtotal</label>
-                    <input id="price" name="price" type="number" step="0.01" min="0" value="{{ $initialPrice > 0 ? number_format($initialPrice, 2, '.', '') : '' }}" placeholder="0.00" readonly data-price>
+                    <input id="price" name="price" type="number" step="0.01" min="0" value="{{ $initialPrice > 0 ? number_format($initialPrice, 2, '.', '') : '' }}" placeholder="0.00" readonly data-subtotal>
                 </div>
                 <div class="field">
                     <label for="discount">Descuento</label>
@@ -148,7 +148,7 @@
             const examSubtotal = document.querySelector('[data-exam-subtotal]');
             const selectedExams = document.querySelector('[data-selected-exams]');
             const examSearch = document.querySelector('[data-exam-search]');
-            const price = document.querySelector('[data-price]');
+            const price = document.querySelector('[data-subtotal]');
             const discount = document.querySelector('[data-discount]');
             const paid = document.querySelector('[data-paid]');
             const total = document.querySelector('[data-total]');
@@ -158,7 +158,7 @@
             const numericValue = (field) => Number.parseFloat(String(field.value || '').replace(',', '.')) || 0;
             const update = () => {
                 const selected = exams.filter((exam) => exam.checked);
-                const subtotal = selected.reduce((sum, exam) => sum + (Number.parseFloat(exam.dataset.price || '0') || 0), 0);
+                const subtotal = selected.reduce((sum, exam) => sum + (Number.parseFloat(exam.dataset.examPrice || '0') || 0), 0);
                 price.value = subtotal.toFixed(2);
                 if (primaryExam) primaryExam.value = selected[0]?.value || '';
                 if (examCount) examCount.textContent = `${selected.length} seleccionado${selected.length === 1 ? '' : 's'}`;
