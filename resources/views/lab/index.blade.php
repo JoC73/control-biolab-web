@@ -56,8 +56,6 @@
             </section>
         @endif
 
-        @include('catalog.partials.exam-builder')
-
         <section class="panel">
             <div class="section-heading">
                 <div>
@@ -66,11 +64,12 @@
                 </div>
             </div>
 
+            @include('catalog.partials.exam-builder', ['embedded' => true])
+
             <div class="category-grid">
                 @foreach ($categories as $category)
-                    <a class="category-card" href="{{ route('lab.results.create', $category['slug']) }}">
+                    <a class="category-card category-{{ $category['slug'] }}" href="{{ route('lab.results.create', $category['slug']) }}">
                         <strong>{{ $category['name'] }}</strong>
-                        <span>{{ count($category['tests']) ?: 'Pendiente' }} pruebas base</span>
                     </a>
                 @endforeach
             </div>

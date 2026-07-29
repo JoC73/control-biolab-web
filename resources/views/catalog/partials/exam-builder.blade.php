@@ -1,4 +1,6 @@
-<section class="panel exam-builder-panel">
+@php $embedded = $embedded ?? false; @endphp
+
+<section class="{{ $embedded ? 'exam-builder-inline' : 'panel exam-builder-panel' }}">
     <div class="section-heading">
         <div>
             <p class="eyebrow">Plantilla nueva</p>

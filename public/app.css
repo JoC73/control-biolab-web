@@ -266,18 +266,25 @@ a {
 
 .category-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
     gap: 10px;
 }
 
 .category-card {
-    min-height: 72px;
-    padding: 14px;
-    transition: border-color .15s ease, transform .15s ease;
+    min-height: 58px;
+    display: flex;
+    align-items: center;
+    padding: 14px 16px;
+    border-color: transparent;
+    color: #fff;
+    overflow: hidden;
+    transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease, filter .15s ease;
 }
 
 .category-card:hover {
-    border-color: var(--blue);
+    border-color: rgba(255, 255, 255, .86);
+    box-shadow: 0 12px 22px rgba(21, 35, 49, .13);
+    filter: saturate(1.06);
     transform: translateY(-1px);
 }
 
@@ -286,11 +293,39 @@ a {
     display: block;
 }
 
+.category-card strong {
+    color: inherit;
+    line-height: 1.18;
+    overflow-wrap: anywhere;
+}
+
 .category-card span {
     margin-top: 8px;
     color: var(--muted);
     font-size: .92rem;
 }
+
+.category-hematologia { background: linear-gradient(135deg, #0f6597, #0b4f78); }
+.category-orina { background: linear-gradient(135deg, #16846c, #0f6654); }
+.category-heces { background: linear-gradient(135deg, #8b5b08, #6f4705); }
+.category-lipidos { background: linear-gradient(135deg, #6d5bd0, #4b3aa2); }
+.category-renales { background: linear-gradient(135deg, #0b7285, #075263); }
+.category-hepaticas { background: linear-gradient(135deg, #b45309, #8a3f06); }
+.category-serologia { background: linear-gradient(135deg, #9f1239, #7f0f2f); }
+.category-hormonas { background: linear-gradient(135deg, #7c3aed, #5b21b6); }
+.category-coagulacion { background: linear-gradient(135deg, #be123c, #8f1232); }
+.category-bacteriologia { background: linear-gradient(135deg, #047857, #065f46); }
+.category-micologia { background: linear-gradient(135deg, #4f46e5, #3730a3); }
+.category-inmunoglobulinas { background: linear-gradient(135deg, #0369a1, #075985); }
+.category-enfermedades-infecciosas { background: linear-gradient(135deg, #c2410c, #9a3412); }
+.category-inmunohematologia { background: linear-gradient(135deg, #0e7490, #155e75); }
+.category-metabolismo { background: linear-gradient(135deg, #15803d, #166534); }
+.category-pancreaticas { background: linear-gradient(135deg, #a16207, #854d0e); }
+.category-cardiacas { background: linear-gradient(135deg, #dc2626, #991b1b); }
+.category-prostaticas { background: linear-gradient(135deg, #4338ca, #312e81); }
+.category-electrolitos { background: linear-gradient(135deg, #0f766e, #115e59); }
+.category-marcadores-tumorales { background: linear-gradient(135deg, #86198f, #701a75); }
+.category-otros { background: linear-gradient(135deg, #475569, #334155); }
 
 .workbench {
     display: grid;
@@ -442,6 +477,25 @@ button,
     display: grid;
     gap: 14px;
     min-width: 0;
+}
+
+.exam-builder-inline {
+    display: grid;
+    gap: 14px;
+    margin-bottom: 18px;
+    padding: 16px;
+    border: 1px solid #c9dde5;
+    border-radius: 8px;
+    background: linear-gradient(180deg, #f8fcfd 0%, #ffffff 100%);
+}
+
+.exam-builder-inline .section-heading {
+    margin-bottom: 0;
+}
+
+.exam-builder-inline h2 {
+    font-size: 1.35rem;
+    line-height: 1.15;
 }
 
 .catalog-strip-wide {
