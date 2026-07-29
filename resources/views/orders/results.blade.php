@@ -6,7 +6,7 @@
             <div>
                 <p class="eyebrow">Resultados</p>
                 <h1>{{ $order['patient_name'] }}</h1>
-                <p>{{ $order['category_title'] }}</p>
+                <p>{{ count($examItems) }} examen{{ count($examItems) === 1 ? '' : 'es' }} en esta orden</p>
             </div>
             <div class="top-actions">
                 <a class="button" href="{{ route('orders.show', $order['id']) }}">Orden</a>
@@ -16,18 +16,38 @@
 
         <form id="results-form" class="workbench" method="POST" action="{{ route('orders.results.save', $order['id']) }}">
             @csrf
+            <input type="hidden" name="exam_index" value="{{ $selectedExamIndex }}">
             <section class="panel">
                 <div class="section-heading">
-                    <div><p class="eyebrow">Captura</p><h2>Campos editables</h2></div>
+                    <div><p class="eyebrow">Orden</p><h2>Examenes solicitados</h2></div>
+                </div>
+                <div class="history-list compact-list">
+                    @foreach ($examItems as $index => $item)
+                        <article class="history-row">
+                            <a href="{{ route('orders.results', ['id' => $order['id'], 'exam' => $index]) }}">
+                                <strong>{{ $item['category_name'] }}</strong>
+                                <span>Q {{ number_format((float) $item['price'], 2) }}</span>
+                                <em>{{ ($item['status'] ?? 'pending') === 'ready' ? 'Listo' : 'Pendiente' }}</em>
+                            </a>
+                            <div class="row-tools">
+                                <a class="button {{ $index === $selectedExamIndex ? 'primary' : '' }}" href="{{ route('orders.results', ['id' => $order['id'], 'exam' => $index]) }}">Editar</a>
+                            </div>
+                        </article>
+                    @endforeach
+                </div>
+            </section>
+            <section class="panel">
+                <div class="section-heading">
+                    <div><p class="eyebrow">Captura</p><h2>{{ $selectedExam['category_title'] }}</h2></div>
                     <button class="button" type="button" data-add-row>Agregar campo</button>
                 </div>
                 <div class="results-table editable-results" data-results-table>
                     <div class="table-head">Analisis</div><div class="table-head">Resultado</div><div class="table-head">Unidades</div><div class="table-head">V.N.</div><div class="table-head action-head">Accion</div>
-                    @php $rows = max(count($order['tests']), 8); @endphp
+                    @php $rows = max(count($selectedExam['tests']), 8); @endphp
                     @for ($index = 0; $index < $rows; $index++)
-                        @php $test = $order['tests'][$index] ?? ['name' => '', 'unit' => '', 'reference' => '']; @endphp
+                        @php $test = $selectedExam['tests'][$index] ?? ['name' => '', 'unit' => '', 'reference' => '']; @endphp
                         <div class="result-cell"><input name="tests[{{ $index }}][name]" value="{{ $test['name'] }}" placeholder="Analisis"></div>
-                        <div class="result-cell"><input name="results[{{ $index }}]" value="{{ $order['results'][$index] ?? '' }}" placeholder="Resultado"></div>
+                        <div class="result-cell"><input name="results[{{ $index }}]" value="{{ $selectedExam['results'][$index] ?? '' }}" placeholder="Resultado"></div>
                         <div class="result-cell"><input name="tests[{{ $index }}][unit]" value="{{ $test['unit'] }}" placeholder="Unidad"></div>
                         <div class="result-cell"><input name="tests[{{ $index }}][reference]" value="{{ $test['reference'] }}" placeholder="Valor normal"></div>
                         <div class="result-cell row-action"><button class="icon-button danger" type="button" data-remove-row>Eliminar</button></div>
@@ -35,8 +55,8 @@
                 </div>
                 <div class="actions">
                     <select name="status">
-                        <option value="pending_results" @selected($order['status'] === 'pending_results')>Guardar borrador</option>
-                        <option value="ready" @selected($order['status'] === 'ready')>Resultado listo</option>
+                        <option value="pending_results" @selected(($selectedExam['status'] ?? 'pending') !== 'ready')>Guardar borrador</option>
+                        <option value="ready" @selected(($selectedExam['status'] ?? 'pending') === 'ready')>Resultado listo</option>
                     </select>
                     <button class="button" type="button" data-add-row>Agregar campo</button>
                     <button class="button primary" type="submit">Guardar resultados</button>

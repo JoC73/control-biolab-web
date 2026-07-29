@@ -49,11 +49,26 @@
 
             <div class="history-list">
                 @forelse ($results as $result)
+                    @php
+                        $examItems = $result['exam_items'] ?? [];
+                        $examNames = collect($examItems)->pluck('category_name')->filter()->implode(', ');
+                        $balance = $result['order_total'] !== null ? max(0, (float) $result['order_total'] - (float) ($result['paid_amount'] ?? 0)) : null;
+                    @endphp
                     <article class="history-row">
                         <a href="{{ route('lab.results.show', $result['id']) }}">
                             <strong>{{ $result['patient_name'] }}</strong>
-                            <span>{{ $result['category_name'] }} · {{ \Illuminate\Support\Carbon::parse($result['date'])->format('d/m/Y') }}</span>
+                            <span>{{ count($examItems) > 1 ? count($examItems).' examenes' : $result['category_name'] }} · {{ \Illuminate\Support\Carbon::parse($result['date'])->format('d/m/Y') }}</span>
+                            @if ($examNames)
+                                <small>{{ $examNames }}</small>
+                            @endif
                             <em>{{ $result['referred_by'] ?: 'Sin referido' }}</em>
+                            @if ($balance !== null)
+                                <span class="badge-line">
+                                    <span class="soft-badge">Total Q {{ number_format((float) $result['order_total'], 2) }}</span>
+                                    <span class="soft-badge">Pagado Q {{ number_format((float) ($result['paid_amount'] ?? 0), 2) }}</span>
+                                    <span class="soft-badge">Saldo Q {{ number_format($balance, 2) }}</span>
+                                </span>
+                            @endif
                         </a>
                         <div class="row-tools">
                             <a class="button" href="{{ route('lab.results.show', $result['id']) }}">Ver</a>

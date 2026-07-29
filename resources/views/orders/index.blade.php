@@ -53,10 +53,11 @@
         <section class="panel">
             <div class="history-list">
                 @forelse ($orders as $order)
+                    @php $examCount = count($order['exam_items'] ?? []); @endphp
                     <article class="history-row">
                         <a href="{{ route('orders.show', $order['id']) }}">
                             <strong>{{ $order['patient_name'] }}</strong>
-                            <span>{{ $order['category_name'] }} · {{ \Illuminate\Support\Carbon::parse($order['date'])->format('d/m/Y') }}</span>
+                            <span>{{ $examCount > 1 ? $examCount.' examenes' : $order['category_name'] }} · {{ \Illuminate\Support\Carbon::parse($order['date'])->format('d/m/Y') }}</span>
                             <em>{{ $order['referrer'] ?: 'Sin referencia' }}</em>
                             <span class="badge-line">
                                 <span class="status-badge status-{{ $order['status'] }}">{{ $statusLabels[$order['status']] ?? $order['status'] }}</span>

@@ -119,6 +119,11 @@
             font-size: 11px;
         }
 
+        .exam-section {
+            page-break-inside: avoid;
+            margin-bottom: 18px;
+        }
+
         .report-footer {
             position: fixed;
             right: 28px;
@@ -212,32 +217,64 @@
         </tr>
     </table>
 
-    <h2>{{ $category['title'] }}</h2>
-
-    <table class="print-table">
-        <thead>
-            <tr>
-                <th>Analisis</th>
-                <th>Resultado</th>
-                <th>Unidades</th>
-                <th>V.N.</th>
-            </tr>
-        </thead>
-        <tbody>
-            @forelse ($tests as $index => $test)
+    @if (!empty($examItems ?? []))
+        @foreach ($examItems as $examItem)
+            @continue(($examItem['status'] ?? 'ready') !== 'ready')
+            <section class="exam-section">
+                <h2>{{ $examItem['category_title'] }}</h2>
+                <table class="print-table">
+                    <thead>
+                        <tr>
+                            <th>Analisis</th>
+                            <th>Resultado</th>
+                            <th>Unidades</th>
+                            <th>V.N.</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse (($examItem['tests'] ?? []) as $index => $test)
+                            <tr>
+                                <td>{{ $test['name'] }}</td>
+                                <td>{{ $examItem['results'][$index] ?? '' }}</td>
+                                <td>{{ $test['unit'] }}</td>
+                                <td>{{ $test['reference'] }}</td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="4">Sin resultados registrados.</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </section>
+        @endforeach
+    @else
+        <h2>{{ $category['title'] }}</h2>
+        <table class="print-table">
+            <thead>
                 <tr>
-                    <td>{{ $test['name'] }}</td>
-                    <td>{{ $result['results'][$index] ?? '' }}</td>
-                    <td>{{ $test['unit'] }}</td>
-                    <td>{{ $test['reference'] }}</td>
+                    <th>Analisis</th>
+                    <th>Resultado</th>
+                    <th>Unidades</th>
+                    <th>V.N.</th>
                 </tr>
-            @empty
-                <tr>
-                    <td colspan="4">Sin resultados registrados.</td>
-                </tr>
-            @endforelse
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                @forelse ($tests as $index => $test)
+                    <tr>
+                        <td>{{ $test['name'] }}</td>
+                        <td>{{ $result['results'][$index] ?? '' }}</td>
+                        <td>{{ $test['unit'] }}</td>
+                        <td>{{ $test['reference'] }}</td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="4">Sin resultados registrados.</td>
+                    </tr>
+                @endforelse
+            </tbody>
+        </table>
+    @endif
 
     <footer class="report-footer">
         <div class="footer-seal">

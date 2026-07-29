@@ -62,29 +62,34 @@ class OrderStore extends JsonStore
     public function create(array $data, array $category): array
     {
         $now = now()->toDateTimeString();
-        $total = $this->total($data);
+        $examItems = $this->prepareExamItems($data['exam_items'] ?? null, $category, $data, $now);
+        $subtotal = round(collect($examItems)->sum('price'), 2);
+        $discount = round((float) ($data['discount'] ?? 0), 2);
+        $total = max(0, round($subtotal - $discount, 2));
         $paid = round((float) ($data['paid_amount'] ?? 0), 2);
+        $primary = $examItems[0];
 
         $record = [
             'id' => (string) Str::uuid(),
             'patient_name' => $data['patient_name'],
             'age' => $data['age'] ?? '',
             'phone' => $data['phone'] ?? '',
-            'category_slug' => $category['slug'],
-            'category_name' => $category['name'],
-            'category_title' => $category['title'],
+            'category_slug' => $primary['category_slug'],
+            'category_name' => $primary['category_name'],
+            'category_title' => $primary['category_title'],
             'date' => $data['date'] ?? now()->toDateString(),
             'referrer' => $data['referrer'] ?? '',
-            'price' => round((float) ($data['price'] ?? 0), 2),
-            'discount' => round((float) ($data['discount'] ?? 0), 2),
+            'price' => $subtotal,
+            'discount' => $discount,
             'total' => $total,
             'paid_amount' => $paid,
             'payment_method' => $data['payment_method'] ?? 'efectivo',
             'payment_timing' => $data['payment_timing'] ?? 'before',
             'payment_status' => $this->paymentStatus($total, $paid),
             'status' => 'pending_results',
-            'tests' => $category['tests'],
+            'tests' => $primary['tests'],
             'results' => [],
+            'exam_items' => $examItems,
             'delivered_at' => null,
             'cancel_reason' => null,
             'cancelled_at' => null,
@@ -94,6 +99,7 @@ class OrderStore extends JsonStore
 
         if ($this->usesDatabase()) {
             DB::table('operational_orders')->insert($this->toDatabase($record));
+            $this->replaceExamItems($record['id'], $examItems);
 
             return $record;
         }
@@ -108,6 +114,10 @@ class OrderStore extends JsonStore
     public function updateResults(string $id, array $data): ?array
     {
         return $this->update($id, function (array $order) use ($data) {
+            $examIndex = (int) ($data['exam_index'] ?? 0);
+            $examItems = $this->examItems($order);
+            $examItems[$examIndex] ??= $this->legacyExamItem($order);
+
             $tests = collect($data['tests'] ?? [])
                 ->filter(fn (array $test, int $index) => filled($test['name'] ?? null) || filled($data['results'][$index] ?? null))
                 ->map(fn (array $test) => [
@@ -118,9 +128,16 @@ class OrderStore extends JsonStore
                 ->values()
                 ->all();
 
-            $order['tests'] = $tests;
-            $order['results'] = array_values($data['results'] ?? []);
-            $order['status'] = $data['status'] ?? 'ready';
+            $examItems[$examIndex]['tests'] = $tests;
+            $examItems[$examIndex]['results'] = array_values($data['results'] ?? []);
+            $examItems[$examIndex]['status'] = ($data['status'] ?? 'ready') === 'ready' ? 'ready' : 'pending';
+            $examItems[$examIndex]['completed_by'] = session('biolab_user.email');
+            $examItems[$examIndex]['completed_at'] = $examItems[$examIndex]['status'] === 'ready' ? now()->toDateTimeString() : null;
+
+            $order['exam_items'] = array_values($examItems);
+            $order['tests'] = $order['exam_items'][0]['tests'] ?? $tests;
+            $order['results'] = $order['exam_items'][0]['results'] ?? array_values($data['results'] ?? []);
+            $order['status'] = $this->allExamItemsReady($order) ? 'ready' : 'pending_results';
 
             return $order;
         });
@@ -155,6 +172,14 @@ class OrderStore extends JsonStore
     public function markDelivered(string $id): ?array
     {
         return $this->update($id, function (array $order) {
+            if (($order['status'] ?? null) === 'delivered') {
+                throw ValidationException::withMessages(['delivery' => 'Esta orden ya fue entregada.']);
+            }
+
+            if (! $this->hasExamItems($order) || ! $this->allExamItemsReady($order)) {
+                throw ValidationException::withMessages(['delivery' => 'No puede entregarse: existen examenes pendientes.']);
+            }
+
             $order['status'] = 'delivered';
             $order['delivered_at'] = now()->toDateTimeString();
 
@@ -196,6 +221,7 @@ class OrderStore extends JsonStore
             $updated['updated_at'] = now()->toDateTimeString();
 
             DB::table('operational_orders')->where('id', $id)->update($this->toDatabase($updated, false));
+            $this->replaceExamItems($id, $updated['exam_items'] ?? $this->examItems($updated));
 
             return $updated;
         }
@@ -240,6 +266,40 @@ class OrderStore extends JsonStore
         return $this->usesDatabase();
     }
 
+    public function examItems(array $order): array
+    {
+        $items = $order['exam_items'] ?? [];
+
+        if (is_array($items) && count($items) > 0) {
+            return array_values($items);
+        }
+
+        return [$this->legacyExamItem($order)];
+    }
+
+    public function hasExamItems(array $order): bool
+    {
+        return count($this->examItems($order)) > 0;
+    }
+
+    public function allExamItemsReady(array $order): bool
+    {
+        $items = $this->examItems($order);
+
+        return count($items) > 0 && collect($items)->every(fn (array $item) => ($item['status'] ?? 'pending') === 'ready');
+    }
+
+    public function orderTitle(array $order): string
+    {
+        $items = $this->examItems($order);
+
+        if (count($items) === 1) {
+            return $items[0]['category_title'] ?? $items[0]['category_name'] ?? $order['category_title'];
+        }
+
+        return count($items).' examenes';
+    }
+
     private function usesDatabase(): bool
     {
         return config('database.default') !== 'sqlite' && config('biolab.storage') === 'database';
@@ -267,6 +327,7 @@ class OrderStore extends JsonStore
             'status' => (string) $row->status,
             'tests' => $this->decodeJson($row->tests),
             'results' => $this->decodeJson($row->results),
+            'exam_items' => $this->databaseExamItems((string) $row->id),
             'delivered_at' => $row->delivered_at ?? null,
             'cancel_reason' => $row->cancel_reason ?? null,
             'cancelled_at' => $row->cancelled_at ?? null,
@@ -319,5 +380,130 @@ class OrderStore extends JsonStore
         $decoded = json_decode((string) $value, true);
 
         return is_array($decoded) ? $decoded : [];
+    }
+
+    private function prepareExamItems(?array $requestedItems, array $category, array $data, string $now): array
+    {
+        $items = collect($requestedItems ?: [[
+            'category_slug' => $category['slug'],
+            'category_name' => $category['name'],
+            'category_title' => $category['title'],
+            'price' => $data['price'] ?? 0,
+            'tests' => $category['tests'],
+        ]])
+            ->map(function (array $item) use ($now) {
+                $price = round((float) ($item['price'] ?? 0), 2);
+
+                return [
+                    'id' => $item['id'] ?? (string) Str::uuid(),
+                    'category_slug' => $item['category_slug'],
+                    'category_name' => $item['category_name'],
+                    'category_title' => $item['category_title'],
+                    'price' => $price,
+                    'discount' => round((float) ($item['discount'] ?? 0), 2),
+                    'total' => $price,
+                    'status' => $item['status'] ?? 'pending',
+                    'tests' => array_values($item['tests'] ?? []),
+                    'results' => array_values($item['results'] ?? []),
+                    'completed_by' => $item['completed_by'] ?? null,
+                    'completed_at' => $item['completed_at'] ?? null,
+                    'created_at' => $item['created_at'] ?? $now,
+                    'updated_at' => $item['updated_at'] ?? $now,
+                ];
+            })
+            ->values()
+            ->all();
+
+        return count($items) > 0 ? $items : [$this->legacyExamItem([
+            'id' => '',
+            'category_slug' => $category['slug'],
+            'category_name' => $category['name'],
+            'category_title' => $category['title'],
+            'price' => $data['price'] ?? 0,
+            'tests' => $category['tests'],
+            'results' => [],
+            'created_at' => $now,
+            'updated_at' => $now,
+        ])];
+    }
+
+    private function legacyExamItem(array $order): array
+    {
+        return [
+            'id' => $order['id'].'-legacy',
+            'category_slug' => $order['category_slug'],
+            'category_name' => $order['category_name'],
+            'category_title' => $order['category_title'],
+            'price' => round((float) ($order['price'] ?? 0), 2),
+            'discount' => round((float) ($order['discount'] ?? 0), 2),
+            'total' => round((float) (($order['price'] ?? 0) - ($order['discount'] ?? 0)), 2),
+            'status' => in_array($order['status'] ?? null, ['ready', 'delivered'], true) ? 'ready' : 'pending',
+            'tests' => array_values($order['tests'] ?? []),
+            'results' => array_values($order['results'] ?? []),
+            'completed_by' => null,
+            'completed_at' => null,
+            'created_at' => $order['created_at'] ?? '',
+            'updated_at' => $order['updated_at'] ?? '',
+        ];
+    }
+
+    private function replaceExamItems(string $orderId, array $items): void
+    {
+        DB::table('order_exam_items')->where('order_id', $orderId)->delete();
+
+        foreach ($items as $item) {
+            DB::table('order_exam_items')->insert($this->examItemToDatabase($orderId, $item));
+        }
+    }
+
+    private function databaseExamItems(string $orderId): array
+    {
+        if (! $this->usesDatabase()) {
+            return [];
+        }
+
+        return DB::table('order_exam_items')
+            ->where('order_id', $orderId)
+            ->orderBy('created_at')
+            ->get()
+            ->map(fn ($row) => [
+                'id' => (string) $row->id,
+                'category_slug' => (string) $row->category_slug,
+                'category_name' => (string) $row->category_name,
+                'category_title' => (string) $row->category_title,
+                'price' => (float) $row->price,
+                'discount' => (float) $row->discount,
+                'total' => (float) $row->total,
+                'status' => (string) $row->status,
+                'tests' => $this->decodeJson($row->tests),
+                'results' => $this->decodeJson($row->results),
+                'completed_by' => $row->completed_by ?? null,
+                'completed_at' => $row->completed_at ?? null,
+                'created_at' => (string) ($row->created_at ?? ''),
+                'updated_at' => (string) ($row->updated_at ?? ''),
+            ])
+            ->values()
+            ->all();
+    }
+
+    private function examItemToDatabase(string $orderId, array $item): array
+    {
+        return [
+            'id' => $item['id'] ?? (string) Str::uuid(),
+            'order_id' => $orderId,
+            'category_slug' => $item['category_slug'],
+            'category_name' => $item['category_name'],
+            'category_title' => $item['category_title'],
+            'price' => $item['price'],
+            'discount' => $item['discount'] ?? 0,
+            'total' => $item['total'] ?? $item['price'],
+            'status' => $item['status'] ?? 'pending',
+            'tests' => json_encode($item['tests'] ?? [], JSON_UNESCAPED_UNICODE),
+            'results' => json_encode($item['results'] ?? [], JSON_UNESCAPED_UNICODE),
+            'completed_by' => $item['completed_by'] ?? null,
+            'completed_at' => $item['completed_at'] ?? null,
+            'created_at' => $item['created_at'] ?? now(),
+            'updated_at' => $item['updated_at'] ?? now(),
+        ];
     }
 }

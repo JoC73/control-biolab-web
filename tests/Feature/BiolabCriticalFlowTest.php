@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Services\CashStore;
+use App\Services\CatalogStore;
 use App\Services\OrderStore;
 use Illuminate\Support\Facades\File;
 use Tests\TestCase;
@@ -129,11 +130,123 @@ class BiolabCriticalFlowTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_multi_exam_order_uses_backend_prices_and_one_cash_movement(): void
+    {
+        $this->seedExamPrices();
+
+        $this->actingAsBiolab('recepcion')
+            ->post('/ordenes', $this->orderPayload([
+                'exam_slugs' => ['hematologia', 'orina', 'heces'],
+                'exam_prices' => ['hematologia' => 75, 'orina' => 50, 'heces' => 40],
+                'price' => 1,
+                'paid_amount' => 100,
+            ]))
+            ->assertRedirect();
+
+        $order = app(OrderStore::class)->all()->first();
+
+        $this->assertCount(3, $order['exam_items']);
+        $this->assertEqualsWithDelta(165.0, $order['price'], 0.001);
+        $this->assertEqualsWithDelta(165.0, $order['total'], 0.001);
+        $this->assertEqualsWithDelta(100.0, $order['paid_amount'], 0.001);
+        $this->assertSame('partial', $order['payment_status']);
+        $this->assertCount(1, app(CashStore::class)->all());
+    }
+
+    public function test_multi_exam_order_rejects_duplicates_and_manipulated_prices(): void
+    {
+        $this->seedExamPrices();
+
+        $this->actingAsBiolab('recepcion')
+            ->post('/ordenes', $this->orderPayload([
+                'exam_slugs' => ['hematologia', 'hematologia'],
+                'exam_prices' => ['hematologia' => 75],
+            ]))
+            ->assertStatus(422);
+
+        $this->actingAsBiolab('recepcion')
+            ->post('/ordenes', $this->orderPayload([
+                'exam_slugs' => ['hematologia', 'orina'],
+                'exam_prices' => ['hematologia' => 1, 'orina' => 50],
+            ]))
+            ->assertStatus(422);
+
+        $this->assertCount(0, app(OrderStore::class)->all());
+    }
+
+    public function test_multi_exam_results_are_independent_and_delivery_requires_all_ready(): void
+    {
+        $this->seedExamPrices();
+
+        $this->actingAsBiolab('recepcion')
+            ->post('/ordenes', $this->orderPayload([
+                'exam_slugs' => ['hematologia', 'orina'],
+                'exam_prices' => ['hematologia' => 75, 'orina' => 50],
+                'paid_amount' => 125,
+            ]))
+            ->assertRedirect();
+
+        $order = app(OrderStore::class)->all()->first();
+
+        $this->actingAsBiolab('laboratorio')
+            ->post("/ordenes/{$order['id']}/resultados", [
+                'exam_index' => 0,
+                'tests' => [['name' => 'Hemoglobina', 'unit' => 'g/dL', 'reference' => '12.0-17.0']],
+                'results' => ['13.5'],
+                'status' => 'ready',
+            ])
+            ->assertRedirect();
+
+        $partial = app(OrderStore::class)->find($order['id']);
+        $this->assertSame('ready', $partial['exam_items'][0]['status']);
+        $this->assertSame('pending', $partial['exam_items'][1]['status']);
+        $this->assertSame('pending_results', $partial['status']);
+
+        $this->actingAsBiolab('recepcion')
+            ->post("/ordenes/{$order['id']}/entregar")
+            ->assertSessionHasErrors('delivery');
+
+        $this->actingAsBiolab('laboratorio')
+            ->post("/ordenes/{$order['id']}/resultados", [
+                'exam_index' => 1,
+                'tests' => [['name' => 'Color', 'unit' => '', 'reference' => 'Amarillo']],
+                'results' => ['Amarillo'],
+                'status' => 'ready',
+            ])
+            ->assertRedirect();
+
+        $ready = app(OrderStore::class)->find($order['id']);
+        $this->assertSame('ready', $ready['status']);
+
+        $this->actingAsBiolab('recepcion')
+            ->post("/ordenes/{$order['id']}/entregar")
+            ->assertRedirect();
+
+        $this->actingAsBiolab('recepcion')
+            ->get("/ordenes/{$order['id']}/pdf/0")
+            ->assertOk()
+            ->assertHeader('Content-Type', 'application/pdf');
+
+        $this->actingAsBiolab('recepcion')
+            ->get("/ordenes/{$order['id']}/pdf")
+            ->assertOk()
+            ->assertHeader('Content-Type', 'application/pdf');
+
+        $this->assertSame('delivered', app(OrderStore::class)->find($order['id'])['status']);
+    }
+
     private function createOrderAsReception(array $overrides = []): void
     {
         $this->actingAsBiolab('recepcion')
             ->post('/ordenes', $this->orderPayload($overrides))
             ->assertRedirect();
+    }
+
+    private function seedExamPrices(): void
+    {
+        app(CatalogStore::class)->savePrice('hematologia', 75);
+        app(CatalogStore::class)->savePrice('orina', 50);
+        app(CatalogStore::class)->savePrice('heces', 40);
     }
 
     private function orderPayload(array $overrides = []): array

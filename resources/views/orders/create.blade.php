@@ -2,8 +2,9 @@
 
 @section('body')
     @php
-        $selectedCategory = old('category_slug', $categories[0]['slug'] ?? '');
-        $initialPrice = (float) old('price', $prices[$selectedCategory] ?? $prices[$categories[0]['slug']] ?? 0);
+        $selectedExamSlugs = collect(old('exam_slugs', [old('category_slug', $categories[0]['slug'] ?? '')]))->filter()->values()->all();
+        $selectedCategory = $selectedExamSlugs[0] ?? ($categories[0]['slug'] ?? '');
+        $initialPrice = collect($selectedExamSlugs)->sum(fn ($slug) => (float) ($prices[$slug] ?? 0));
         $initialDiscountValue = old('discount');
         $initialPaidValue = old('paid_amount');
         $initialDiscount = (float) ($initialDiscountValue ?? 0);
@@ -48,14 +49,7 @@
                     <label for="date">Fecha</label>
                     <input id="date" name="date" type="date" value="{{ old('date', now()->toDateString()) }}" required>
                 </div>
-                <div class="field">
-                    <label for="category_slug">Examen</label>
-                    <select id="category_slug" name="category_slug" required data-price-source>
-                        @foreach ($categories as $category)
-                            <option value="{{ $category['slug'] }}" data-price="{{ $prices[$category['slug']] ?? 0 }}" @selected($selectedCategory === $category['slug'])>{{ $category['name'] }}</option>
-                        @endforeach
-                    </select>
-                </div>
+                <input type="hidden" name="category_slug" value="{{ $selectedCategory }}" data-primary-exam>
                 <div class="field span-2">
                     <label for="referrer">Referencia medica</label>
                     <input id="referrer" name="referrer" list="referrers" value="{{ old('referrer') }}" placeholder="Medico o institucion">
@@ -67,10 +61,31 @@
                 </div>
             </section>
 
+            <section class="panel">
+                <div class="section-heading">
+                    <div>
+                        <p class="eyebrow">Examenes</p>
+                        <h2>Selecciona uno o varios examenes</h2>
+                    </div>
+                    <span class="soft-badge" data-exam-count>{{ count($selectedExamSlugs) }} seleccionado{{ count($selectedExamSlugs) === 1 ? '' : 's' }}</span>
+                </div>
+                <div class="catalog-grid compact-exam-picker">
+                    @foreach ($categories as $category)
+                        @php $examPrice = (float) ($prices[$category['slug']] ?? 0); @endphp
+                        <label class="catalog-card selectable-card">
+                            <input type="checkbox" name="exam_slugs[]" value="{{ $category['slug'] }}" data-exam-option data-price="{{ $examPrice }}" @checked(in_array($category['slug'], $selectedExamSlugs, true))>
+                            <input type="hidden" name="exam_prices[{{ $category['slug'] }}]" value="{{ number_format($examPrice, 2, '.', '') }}">
+                            <strong>{{ $category['name'] }}</strong>
+                            <span>Q {{ number_format($examPrice, 2) }}</span>
+                        </label>
+                    @endforeach
+                </div>
+            </section>
+
             <section class="panel form-panel">
                 <div class="field">
-                    <label for="price">Precio</label>
-                    <input id="price" name="price" type="number" step="0.01" min="0" value="{{ $initialPrice > 0 ? number_format($initialPrice, 2, '.', '') : '' }}" placeholder="0.00" required data-price data-money-input>
+                    <label for="price">Subtotal</label>
+                    <input id="price" name="price" type="number" step="0.01" min="0" value="{{ $initialPrice > 0 ? number_format($initialPrice, 2, '.', '') : '' }}" placeholder="0.00" readonly data-price>
                 </div>
                 <div class="field">
                     <label for="discount">Descuento</label>
@@ -114,17 +129,25 @@
 
     <script>
         (() => {
-            const exam = document.querySelector('[data-price-source]');
+            const exams = Array.from(document.querySelectorAll('[data-exam-option]'));
+            const primaryExam = document.querySelector('[data-primary-exam]');
+            const examCount = document.querySelector('[data-exam-count]');
             const price = document.querySelector('[data-price]');
             const discount = document.querySelector('[data-discount]');
             const paid = document.querySelector('[data-paid]');
             const total = document.querySelector('[data-total]');
             const balance = document.querySelector('[data-balance]');
-            if (!exam || !price || !discount || !paid || !total || !balance) return;
+            if (!exams.length || !price || !discount || !paid || !total || !balance) return;
 
             const numericValue = (field) => Number.parseFloat(String(field.value || '').replace(',', '.')) || 0;
             const update = () => {
-                const netTotal = Math.max(0, numericValue(price) - numericValue(discount));
+                const selected = exams.filter((exam) => exam.checked);
+                const subtotal = selected.reduce((sum, exam) => sum + (Number.parseFloat(exam.dataset.price || '0') || 0), 0);
+                price.value = subtotal.toFixed(2);
+                if (primaryExam) primaryExam.value = selected[0]?.value || '';
+                if (examCount) examCount.textContent = `${selected.length} seleccionado${selected.length === 1 ? '' : 's'}`;
+
+                const netTotal = Math.max(0, subtotal - numericValue(discount));
                 const paidAmount = Math.max(0, numericValue(paid));
 
                 total.value = netTotal.toFixed(2);
@@ -136,17 +159,24 @@
                 setTimeout(update, 50);
                 setTimeout(update, 250);
             };
-            exam.addEventListener('change', () => {
-                price.value = exam.selectedOptions[0].dataset.price || 0;
-                scheduleUpdate();
-            });
-            [price, discount, paid].forEach((field) => {
+            exams.forEach((exam) => exam.addEventListener('change', scheduleUpdate));
+            [discount, paid].forEach((field) => {
                 field.addEventListener('focus', () => field.select());
                 field.addEventListener('input', scheduleUpdate);
                 field.addEventListener('change', scheduleUpdate);
                 field.addEventListener('keyup', scheduleUpdate);
             });
-            document.getElementById('order-form')?.addEventListener('submit', scheduleUpdate);
+            document.getElementById('order-form')?.addEventListener('submit', (event) => {
+                scheduleUpdate();
+                if (event.currentTarget.dataset.submitting === '1') {
+                    event.preventDefault();
+                    return;
+                }
+                event.currentTarget.dataset.submitting = '1';
+                event.currentTarget.querySelectorAll('button[type="submit"]').forEach((button) => {
+                    button.disabled = true;
+                });
+            });
             window.addEventListener('load', scheduleUpdate);
             window.addEventListener('pageshow', scheduleUpdate);
             document.addEventListener('visibilitychange', scheduleUpdate);

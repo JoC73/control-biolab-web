@@ -61,27 +61,41 @@ class OrderController extends Controller
             'patient_name' => ['required', 'string', 'max:160'],
             'age' => ['nullable', 'string', 'max:40'],
             'phone' => ['nullable', 'string', 'max:40'],
-            'category_slug' => ['required', 'string'],
+            'category_slug' => ['nullable', 'string'],
+            'exam_slugs' => ['nullable', 'array'],
+            'exam_slugs.*' => ['string'],
             'date' => ['required', 'date'],
             'referrer' => ['nullable', 'string', 'max:120'],
-            'price' => ['required', 'numeric', 'min:0'],
+            'price' => ['nullable', 'numeric', 'min:0'],
             'discount' => ['nullable', 'numeric', 'min:0'],
             'paid_amount' => ['nullable', 'numeric', 'min:0'],
             'payment_method' => ['required', 'string', 'max:40'],
             'payment_timing' => ['required', 'in:before,after'],
         ]);
 
-        $category = $this->category($data['category_slug']);
+        $examItems = $this->validatedExamItems($data, $request);
+        $category = $this->category($examItems[0]['category_slug']);
         abort_if($category === null, 404);
 
-        $total = max(0, round((float) ($data['price'] ?? 0) - (float) ($data['discount'] ?? 0), 2));
+        $subtotal = round(collect($examItems)->sum('price'), 2);
+        $total = max(0, round($subtotal - (float) ($data['discount'] ?? 0), 2));
         $paid = round((float) ($data['paid_amount'] ?? 0), 2);
+
+        if ((float) ($data['discount'] ?? 0) > $subtotal) {
+            return back()
+                ->withErrors(['discount' => 'El descuento no puede ser mayor al subtotal de examenes.'])
+                ->withInput();
+        }
 
         if ($paid > $total) {
             return back()
                 ->withErrors(['paid_amount' => 'El pago inicial no puede ser mayor al total neto.'])
                 ->withInput();
         }
+
+        $data['price'] = $subtotal;
+        $data['exam_items'] = $examItems;
+        $data['category_slug'] = $examItems[0]['category_slug'];
 
         [$order, $movement] = $this->runAtomic(fn () => $this->createOrderWithInitialPayment($data, $category));
 
@@ -105,16 +119,25 @@ class OrderController extends Controller
 
         return view('orders.show', [
             'order' => $order,
+            'examItems' => $this->orders->examItems($order),
+            'orderTitle' => $this->orders->orderTitle($order),
             'whatsappUrl' => $this->canShareResults($order) ? $this->whatsappUrl($order) : null,
         ]);
     }
 
-    public function results(string $id)
+    public function results(Request $request, string $id)
     {
         $order = $this->orders->find($id);
         abort_if($order === null, 404);
+        $examItems = $this->orders->examItems($order);
+        $selectedExamIndex = min(max(0, (int) $request->input('exam', 0)), max(0, count($examItems) - 1));
 
-        return view('orders.results', ['order' => $order]);
+        return view('orders.results', [
+            'order' => $order,
+            'examItems' => $examItems,
+            'selectedExam' => $examItems[$selectedExamIndex],
+            'selectedExamIndex' => $selectedExamIndex,
+        ]);
     }
 
     public function saveResults(Request $request, string $id)
@@ -129,13 +152,14 @@ class OrderController extends Controller
             'tests.*.reference' => ['nullable', 'string', 'max:120'],
             'results' => ['array'],
             'results.*' => ['nullable', 'string', 'max:120'],
+            'exam_index' => ['nullable', 'integer', 'min:0'],
             'status' => ['required', 'in:pending_results,ready'],
         ]);
 
         $updated = $this->orders->updateResults($id, $data);
         $this->audit->record('order_results_saved', 'order', $id, ['status' => $data['status']]);
 
-        if ($updated && ($updated['status'] ?? null) === 'ready') {
+        if ($updated && $this->orders->allExamItemsReady($updated)) {
             $record = $this->results->saveFromOrder($updated);
             $this->audit->record('result_archived_from_order', 'result', $record['id'], ['order_id' => $id]);
         }
@@ -204,8 +228,8 @@ class OrderController extends Controller
             return back()->withErrors(['delivery' => 'Esta orden ya fue entregada.']);
         }
 
-        if (($order['status'] ?? null) !== 'ready') {
-            return back()->withErrors(['delivery' => 'No se puede entregar: resultados pendientes.']);
+        if (! $this->orders->allExamItemsReady($order)) {
+            return back()->withErrors(['delivery' => 'No puede entregarse: existen examenes pendientes.']);
         }
 
         $updated = $this->orders->markDelivered($id);
@@ -273,6 +297,15 @@ class OrderController extends Controller
         return $this->pdfResponse($order, 'attachment');
     }
 
+    public function pdfExam(string $id, int $exam)
+    {
+        $order = $this->orders->find($id);
+        abort_if($order === null, 404);
+        $this->ensurePrintableExam($order, $exam);
+
+        return $this->pdfResponse($order, 'attachment', $exam);
+    }
+
     public function print(string $id)
     {
         $order = $this->orders->find($id);
@@ -285,6 +318,56 @@ class OrderController extends Controller
     private function category(string $slug): ?array
     {
         return Arr::first($this->catalog->categories(), fn (array $category) => $category['slug'] === $slug);
+    }
+
+    private function validatedExamItems(array $data, Request $request): array
+    {
+        $slugs = collect($data['exam_slugs'] ?? [])
+            ->filter()
+            ->values();
+
+        if ($slugs->isEmpty() && filled($data['category_slug'] ?? null)) {
+            $slugs = collect([$data['category_slug']]);
+        }
+
+        if ($slugs->isEmpty()) {
+            abort(422, 'Debe seleccionar al menos un examen.');
+        }
+
+        if ($slugs->duplicates()->isNotEmpty()) {
+            abort(422, 'No se permite seleccionar examenes duplicados.');
+        }
+
+        $prices = $this->catalog->prices();
+        $postedPrices = collect($request->input('exam_prices', []));
+
+        return $slugs
+            ->map(function (string $slug) use ($prices, $postedPrices, $data) {
+                $category = $this->category($slug);
+                abort_if($category === null, 422, 'El examen seleccionado no existe o no esta activo.');
+
+                $catalogPrice = round((float) ($prices[$slug] ?? 0), 2);
+                $postedPrice = round((float) ($postedPrices[$slug] ?? ($data['price'] ?? 0)), 2);
+                $price = $catalogPrice > 0 ? $catalogPrice : $postedPrice;
+
+                if ($catalogPrice > 0 && abs($postedPrice - $catalogPrice) > 0.001) {
+                    abort(422, 'El precio del examen fue manipulado. Vuelva a seleccionar el examen.');
+                }
+
+                if ($price < 0) {
+                    abort(422, 'El precio del examen no puede ser negativo.');
+                }
+
+                return [
+                    'category_slug' => $category['slug'],
+                    'category_name' => $category['name'],
+                    'category_title' => $category['title'],
+                    'price' => $price,
+                    'tests' => $category['tests'] ?? [],
+                ];
+            })
+            ->values()
+            ->all();
     }
 
     private function createOrderWithInitialPayment(array $data, array $category): array
@@ -328,6 +411,7 @@ class OrderController extends Controller
     {
         return in_array($order['status'] ?? null, ['ready', 'delivered'], true)
             && ($order['payment_status'] ?? null) === 'paid'
+            && $this->orders->allExamItemsReady($order)
             && $this->orderHasAnyResult($order);
     }
 
@@ -342,10 +426,29 @@ class OrderController extends Controller
         }
     }
 
+    private function ensurePrintableExam(array $order, int $examIndex): void
+    {
+        if (($order['status'] ?? null) === 'cancelled') {
+            abort(403, 'No se puede imprimir una orden anulada.');
+        }
+
+        if (($order['payment_status'] ?? null) !== 'paid') {
+            abort(403, 'No se puede imprimir: la orden debe estar pagada.');
+        }
+
+        $examItem = $this->orders->examItems($order)[$examIndex] ?? null;
+        abort_if($examItem === null, 404);
+
+        if (($examItem['status'] ?? null) !== 'ready') {
+            abort(403, 'No se puede imprimir: el examen seleccionado aun esta pendiente.');
+        }
+    }
+
     private function reportPayload(array $order): array
     {
         return [
             'order' => $order,
+            'examItems' => $this->orders->examItems($order),
             'business' => config('lab.business'),
             'logoDataUri' => $this->assetDataUri(public_path('assets/biolab-logo-pdf.jpg'), 'image/jpeg'),
             'signatureDataUri' => $this->assetDataUri(public_path('assets/firma-biolab-pdf.jpg'), 'image/jpeg'),
@@ -354,7 +457,8 @@ class OrderController extends Controller
 
     private function orderHasAnyResult(array $order): bool
     {
-        return collect($order['results'] ?? [])->contains(fn ($value) => filled($value));
+        return collect($this->orders->examItems($order))
+            ->contains(fn (array $item) => collect($item['results'] ?? [])->contains(fn ($value) => filled($value)));
     }
 
     private function paymentStatusLabel(string $status): string
@@ -366,9 +470,14 @@ class OrderController extends Controller
         ][$status] ?? $status;
     }
 
-    private function pdfResponse(array $order, string $disposition)
+    private function pdfResponse(array $order, string $disposition, ?int $examIndex = null)
     {
-        $html = view('orders.pdf', $this->reportPayload($order))->render();
+        $payload = $this->reportPayload($order);
+        if ($examIndex !== null) {
+            $payload['examItems'] = [($payload['examItems'][$examIndex] ?? abort(404))];
+        }
+
+        $html = view('orders.pdf', $payload)->render();
         $options = new Options;
         $options->set('defaultFont', 'DejaVu Sans');
         $pdf = new Dompdf($options);

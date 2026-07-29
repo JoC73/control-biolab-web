@@ -252,6 +252,7 @@ class LabController extends Controller
                 'results' => $record['results'] ?? [],
             ],
             'tests' => $record['tests'] ?? [],
+            'examItems' => $record['exam_items'] ?? [],
         ];
     }
 

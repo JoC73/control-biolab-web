@@ -5,7 +5,8 @@
         $balance = max(0, round((float) $order['total'] - (float) $order['paid_amount'], 2));
         $statusLabels = ['pending_results' => 'Pendiente resultado', 'ready' => 'Listo', 'delivered' => 'Entregado', 'cancelled' => 'Anulado'];
         $paymentLabels = ['unpaid' => 'Sin pago', 'partial' => 'Parcial', 'paid' => 'Pagado'];
-        $canDeliver = ($order['status'] ?? null) === 'ready' && ($order['payment_status'] ?? null) === 'paid' && $balance <= 0;
+        $pendingExams = collect($examItems)->where('status', '!=', 'ready')->count();
+        $canDeliver = ($order['status'] ?? null) === 'ready' && ($order['payment_status'] ?? null) === 'paid' && $balance <= 0 && $pendingExams === 0;
     @endphp
 
     <main class="app-shell">
@@ -14,7 +15,7 @@
                 <p class="eyebrow">Orden {{ substr($order['id'], 0, 8) }}</p>
                 <h1>{{ $order['patient_name'] }}</h1>
                 <p>
-                    {{ $order['category_name'] }}
+                    {{ $orderTitle }}
                     <span class="status-badge status-{{ $order['status'] }}">{{ $statusLabels[$order['status']] ?? $order['status'] }}</span>
                     <span class="status-badge pay-{{ $order['payment_status'] }}">{{ $paymentLabels[$order['payment_status']] ?? $order['payment_status'] }}</span>
                 </p>
@@ -43,6 +44,7 @@
             <article><span>Q {{ number_format($order['total'], 2) }}</span><p>Total</p></article>
             <article><span>Q {{ number_format($order['paid_amount'], 2) }}</span><p>Pagado</p></article>
             <article><span>Q {{ number_format($balance, 2) }}</span><p>Saldo</p></article>
+            <article><span>{{ count($examItems) }}</span><p>Examenes</p></article>
         </section>
 
         <section class="panel form-panel">
@@ -90,8 +92,8 @@
                         <p class="empty-state">
                             @if ($balance > 0)
                                 No se puede entregar: saldo pendiente Q {{ number_format($balance, 2) }}.
-                            @elseif (($order['status'] ?? null) !== 'ready')
-                                No se puede entregar: resultados pendientes.
+                            @elseif ($pendingExams > 0)
+                                No puede entregarse: existen examenes pendientes.
                             @endif
                         </p>
                     @endif
@@ -110,23 +112,27 @@
 
         <section class="panel">
             <div class="section-heading">
-                <div><p class="eyebrow">Resultado</p><h2>{{ $order['category_title'] }}</h2></div>
+                <div><p class="eyebrow">Examenes</p><h2>Resultados de la orden</h2></div>
             </div>
-            <table class="print-table">
-                <thead><tr><th>Analisis</th><th>Resultado</th><th>Unidades</th><th>V.N.</th></tr></thead>
-                <tbody>
-                    @forelse ($order['tests'] as $index => $test)
-                        <tr>
-                            <td>{{ $test['name'] }}</td>
-                            <td>{{ $order['results'][$index] ?? '' }}</td>
-                            <td>{{ $test['unit'] }}</td>
-                            <td>{{ $test['reference'] }}</td>
-                        </tr>
-                    @empty
-                        <tr><td colspan="4">Resultados pendientes.</td></tr>
-                    @endforelse
-                </tbody>
-            </table>
+            <div class="history-list compact-list">
+                @foreach ($examItems as $index => $item)
+                    <article class="history-row">
+                        <a href="{{ route('orders.results', ['id' => $order['id'], 'exam' => $index]) }}">
+                            <strong>{{ $item['category_name'] }}</strong>
+                            <span>Q {{ number_format((float) $item['price'], 2) }} · {{ count($item['tests'] ?? []) }} campo{{ count($item['tests'] ?? []) === 1 ? '' : 's' }}</span>
+                            <em>{{ ($item['status'] ?? 'pending') === 'ready' ? 'Listo' : 'Pendiente' }}</em>
+                        </a>
+                        <div class="row-tools">
+                            @if ($order['status'] !== 'cancelled')
+                                <a class="button" href="{{ route('orders.results', ['id' => $order['id'], 'exam' => $index]) }}">Resultados</a>
+                            @endif
+                            @if (($item['status'] ?? 'pending') === 'ready' && ($order['payment_status'] ?? null) === 'paid')
+                                <a class="button" href="{{ route('orders.pdf.exam', ['id' => $order['id'], 'exam' => $index]) }}">PDF individual</a>
+                            @endif
+                        </div>
+                    </article>
+                @endforeach
+            </div>
         </section>
     </main>
 @endsection
