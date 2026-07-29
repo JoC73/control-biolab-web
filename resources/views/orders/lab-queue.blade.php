@@ -1,6 +1,8 @@
 @extends('layouts.lab', ['title' => 'Laboratorio'])
 
 @section('body')
+    @php $auth = app(\App\Services\AuthStore::class); @endphp
+
     <main class="app-shell">
         <header class="topbar compact">
             <div>
@@ -9,8 +11,12 @@
                 <p>Pacientes con solicitud registrada para llenar o completar resultados.</p>
             </div>
             <div class="top-actions">
-                <a class="button" href="{{ route('orders.index') }}">Ordenes</a>
-                <a class="button primary" href="{{ route('orders.create') }}">Registrar cobro</a>
+                @if ($auth->hasPermission('orders.view'))
+                    <a class="button" href="{{ route('orders.index') }}">Ordenes</a>
+                @endif
+                @if ($auth->hasPermission('orders.create'))
+                    <a class="button primary" href="{{ route('orders.create') }}">Registrar cobro</a>
+                @endif
             </div>
         </header>
 

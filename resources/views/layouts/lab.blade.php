@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="{{ asset('app.css') }}?v={{ filemtime(public_path('app.css')) }}">
 </head>
 <body>
+    @php $auth = app(\App\Services\AuthStore::class); @endphp
     <div class="app-frame">
         <aside class="sidebar">
             <a class="brand-block" href="{{ route('lab.index') }}">
@@ -19,14 +20,28 @@
 
             <nav class="side-nav" aria-label="Navegacion principal">
                 <a class="{{ request()->routeIs('lab.index') ? 'active' : '' }}" href="{{ route('lab.index') }}">Inicio</a>
-                <a class="{{ request()->routeIs('orders.create') ? 'active' : '' }}" href="{{ route('orders.create') }}">Registrar cobro</a>
-                <a class="{{ request()->routeIs('orders.lab') || request()->routeIs('orders.results') ? 'active' : '' }}" href="{{ route('orders.lab') }}">Laboratorio</a>
-                <a class="{{ request()->routeIs('orders.*') && ! request()->routeIs('orders.create') && ! request()->routeIs('orders.lab') && ! request()->routeIs('orders.results') ? 'active' : '' }}" href="{{ route('orders.index') }}">Ordenes</a>
-                <a class="{{ request()->routeIs('cash.*') ? 'active' : '' }}" href="{{ route('cash.index') }}">Caja</a>
-                <a class="{{ request()->routeIs('catalog.*') ? 'active' : '' }}" href="{{ route('catalog.index') }}">Catalogos</a>
-                <a class="{{ request()->routeIs('lab.history') || request()->routeIs('lab.results.*') ? 'active' : '' }}" href="{{ route('lab.history') }}">Historial</a>
-                @if (session('biolab_user.role') === 'admin')
+                @if ($auth->hasPermission('orders.create'))
+                    <a class="{{ request()->routeIs('orders.create') ? 'active' : '' }}" href="{{ route('orders.create') }}">Registrar cobro</a>
+                @endif
+                @if ($auth->hasPermission('laboratory.view'))
+                    <a class="{{ request()->routeIs('orders.lab') || request()->routeIs('orders.results') ? 'active' : '' }}" href="{{ route('orders.lab') }}">Laboratorio</a>
+                @endif
+                @if ($auth->hasPermission('orders.view'))
+                    <a class="{{ request()->routeIs('orders.*') && ! request()->routeIs('orders.create') && ! request()->routeIs('orders.lab') && ! request()->routeIs('orders.results') ? 'active' : '' }}" href="{{ route('orders.index') }}">Ordenes</a>
+                @endif
+                @if ($auth->hasPermission('cash.view'))
+                    <a class="{{ request()->routeIs('cash.*') ? 'active' : '' }}" href="{{ route('cash.index') }}">Caja</a>
+                @endif
+                @if ($auth->hasPermission('catalogs.view'))
+                    <a class="{{ request()->routeIs('catalog.*') ? 'active' : '' }}" href="{{ route('catalog.index') }}">Catalogos</a>
+                @endif
+                @if ($auth->hasPermission('results.view'))
+                    <a class="{{ request()->routeIs('lab.history') || request()->routeIs('lab.results.*') ? 'active' : '' }}" href="{{ route('lab.history') }}">Historial</a>
+                @endif
+                @if ($auth->hasPermission('users.view'))
                     <a class="{{ request()->routeIs('admin.users.*') ? 'active' : '' }}" href="{{ route('admin.users.index') }}">Usuarios</a>
+                @endif
+                @if ($auth->hasPermission('audit.view'))
                     <a class="{{ request()->routeIs('audit.*') ? 'active' : '' }}" href="{{ route('audit.index') }}">Auditoria</a>
                 @endif
             </nav>
@@ -56,9 +71,21 @@
                 </a>
                 <nav class="mobile-nav" aria-label="Navegacion movil">
                     <a href="{{ route('lab.index') }}">Inicio</a>
-                    <a href="{{ route('orders.create') }}">Cobro</a>
-                    <a href="{{ route('orders.lab') }}">Lab</a>
-                    <a href="{{ route('orders.index') }}">Ordenes</a>
+                    @if ($auth->hasPermission('orders.create'))
+                        <a href="{{ route('orders.create') }}">Cobro</a>
+                    @endif
+                    @if ($auth->hasPermission('laboratory.view'))
+                        <a href="{{ route('orders.lab') }}">Lab</a>
+                    @endif
+                    @if ($auth->hasPermission('orders.view'))
+                        <a href="{{ route('orders.index') }}">Ordenes</a>
+                    @endif
+                    @if ($auth->hasPermission('cash.view'))
+                        <a href="{{ route('cash.index') }}">Caja</a>
+                    @endif
+                    @if ($auth->hasPermission('catalogs.view'))
+                        <a href="{{ route('catalog.index') }}">Catalogos</a>
+                    @endif
                 </nav>
             </header>
 

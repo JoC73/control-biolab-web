@@ -25,11 +25,14 @@ class AuthStore
         'payments.create' => 'Registrar pagos',
         'cash.view' => 'Ver caja',
         'cash.manage' => 'Gestionar caja',
+        'laboratory.view' => 'Ver modulo laboratorio',
         'results.view' => 'Ver resultados',
         'results.create' => 'Crear resultados',
         'results.edit' => 'Editar resultados',
         'results.print' => 'PDF e impresion',
         'catalogs.view' => 'Ver catalogos',
+        'catalogs.references' => 'Gestionar referencias',
+        'catalogs.prices' => 'Gestionar precios',
         'catalogs.manage' => 'Gestionar catalogos',
         'users.view' => 'Ver usuarios',
         'users.manage' => 'Gestionar usuarios',
@@ -38,16 +41,16 @@ class AuthStore
 
     public const ROLE_PERMISSIONS = [
         'admin' => ['*'],
-        'recepcion' => ['orders.view', 'orders.create', 'orders.deliver', 'payments.create', 'cash.view', 'catalogs.view', 'results.view', 'results.print'],
-        'laboratorio' => ['orders.view', 'results.view', 'results.create', 'results.edit', 'results.print', 'catalogs.view', 'catalogs.manage'],
-        'caja' => ['orders.view', 'orders.create', 'orders.cancel', 'payments.create', 'cash.view', 'cash.manage'],
+        'recepcion' => ['orders.view', 'orders.create', 'orders.deliver', 'payments.create', 'cash.view', 'catalogs.view', 'catalogs.references', 'results.view', 'results.print'],
+        'laboratorio' => ['orders.view', 'laboratory.view', 'results.view', 'results.create', 'results.edit', 'results.print', 'catalogs.view', 'catalogs.manage'],
+        'caja' => ['orders.view', 'orders.create', 'orders.cancel', 'payments.create', 'cash.view', 'cash.manage', 'catalogs.view', 'catalogs.prices'],
     ];
 
     public const PERMISSIONS = [
         'admin' => ['Administracion total', 'Usuarios y permisos', 'Auditoria', 'Catalogos', 'Caja', 'Laboratorio', 'Resultados'],
         'recepcion' => ['Registrar cobros', 'Consultar ordenes', 'Caja basica', 'Entregar resultados', 'Catalogos de referencia'],
         'laboratorio' => ['Cola de laboratorio', 'Llenar resultados', 'Editar resultados', 'Generar PDF'],
-        'caja' => ['Registrar cobros', 'Caja', 'Abonos', 'Anular movimientos autorizados'],
+        'caja' => ['Registrar cobros', 'Caja', 'Abonos', 'Precios de examenes', 'Anular movimientos autorizados'],
     ];
 
     public function attempt(string $email, string $password): ?array

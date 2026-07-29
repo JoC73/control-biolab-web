@@ -1,6 +1,8 @@
 @extends('layouts.lab', ['title' => 'Catalogos'])
 
 @section('body')
+    @php $auth = app(\App\Services\AuthStore::class); @endphp
+
     <main class="app-shell">
         <header class="topbar compact">
             <div>
@@ -9,7 +11,12 @@
                 <p>Precios, medicos, instituciones y plantillas de examenes en una vista horizontal.</p>
             </div>
             <div class="top-actions">
-                <a class="button" href="{{ route('orders.create') }}">Registrar cobro</a>
+                @if ($auth->hasPermission('orders.create'))
+                    <a class="button" href="{{ route('orders.create') }}">Registrar cobro</a>
+                @endif
+                @if ($auth->hasPermission('catalogs.manage'))
+                    <a class="button primary" href="{{ route('catalog.exam.create') }}">Crear examen</a>
+                @endif
             </div>
         </header>
 
@@ -27,11 +34,13 @@
                     <span class="count-pill">{{ count($referrers) }}</span>
                 </div>
 
-                <form class="catalog-inline-form" method="POST" action="{{ route('catalog.referrer') }}">
-                    @csrf
-                    <input name="name" placeholder="Nueva referencia medica o institucion" required>
-                    <button class="button primary" type="submit">Agregar</button>
-                </form>
+                @if ($auth->hasPermission('catalogs.references') || $auth->hasPermission('catalogs.manage'))
+                    <form class="catalog-inline-form" method="POST" action="{{ route('catalog.referrer') }}">
+                        @csrf
+                        <input name="name" placeholder="Nueva referencia medica o institucion" required>
+                        <button class="button primary" type="submit">Agregar</button>
+                    </form>
+                @endif
 
                 <input class="catalog-search" type="search" placeholder="Buscar referencia..." data-catalog-filter="referrer-list">
 
@@ -77,11 +86,13 @@
                             <div>{{ count($category['tests']) ?: 'Libre' }}</div>
                             <div>
                                 <input type="hidden" name="slug" value="{{ $category['slug'] }}">
-                                <input class="price-input" name="price" type="number" min="0" step="0.01" value="{{ $prices[$category['slug']] ?? 0 }}" aria-label="Precio base de {{ $category['name'] }}">
+                                <input class="price-input" name="price" type="number" min="0" step="0.01" value="{{ $prices[$category['slug']] ?? 0 }}" aria-label="Precio base de {{ $category['name'] }}" @readonly(! $auth->hasPermission('catalogs.prices') && ! $auth->hasPermission('catalogs.manage'))>
                             </div>
                             <div class="row-actions">
-                                <button class="button compact-button" type="submit">Guardar</button>
-                                @if (! empty($category['custom']))
+                                @if ($auth->hasPermission('catalogs.prices') || $auth->hasPermission('catalogs.manage'))
+                                    <button class="button compact-button" type="submit">Guardar</button>
+                                @endif
+                                @if (! empty($category['custom']) && $auth->hasPermission('catalogs.manage'))
                                     <button class="button danger-button compact-button" type="submit" form="delete-exam-{{ $category['slug'] }}">Eliminar</button>
                                 @endif
                             </div>

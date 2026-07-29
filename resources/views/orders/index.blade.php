@@ -2,6 +2,7 @@
 
 @section('body')
     @php
+        $auth = app(\App\Services\AuthStore::class);
         $statusLabels = ['pending_results' => 'Pendiente resultado', 'ready' => 'Listo', 'delivered' => 'Entregado', 'cancelled' => 'Anulado'];
         $paymentLabels = ['unpaid' => 'Sin pago', 'partial' => 'Parcial', 'paid' => 'Pagado'];
     @endphp
@@ -14,8 +15,12 @@
                 <p>Consulta las solicitudes registradas, su estado de pago y avance de resultados.</p>
             </div>
             <div class="top-actions">
-                <a class="button" href="{{ route('orders.lab') }}">Laboratorio</a>
-                <a class="button primary" href="{{ route('orders.create') }}">Registrar cobro</a>
+                @if ($auth->hasPermission('laboratory.view'))
+                    <a class="button" href="{{ route('orders.lab') }}">Laboratorio</a>
+                @endif
+                @if ($auth->hasPermission('orders.create'))
+                    <a class="button primary" href="{{ route('orders.create') }}">Registrar cobro</a>
+                @endif
             </div>
         </header>
 
@@ -81,10 +86,12 @@
                         </a>
                         <div class="row-tools">
                             <a class="button" href="{{ route('orders.show', $order['id']) }}">Ver</a>
-                            @if ($order['status'] !== 'cancelled')
+                            @if ($order['status'] !== 'cancelled' && ($auth->hasPermission('results.create') || $auth->hasPermission('results.edit')))
                                 <a class="button" href="{{ route('orders.results', $order['id']) }}">Resultados</a>
                             @endif
-                            <a class="button" href="{{ route('orders.pdf', $order['id']) }}">PDF</a>
+                            @if ($auth->hasPermission('results.print'))
+                                <a class="button" href="{{ route('orders.pdf', $order['id']) }}">PDF</a>
+                            @endif
                         </div>
                     </article>
                 @empty

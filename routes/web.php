@@ -15,7 +15,7 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 Route::middleware('biolab.auth')->group(function () {
     Route::get('/', [LabController::class, 'index'])->name('lab.index');
-    Route::get('/laboratorio', [OrderController::class, 'labQueue'])->middleware('biolab.permission:orders.view,results.view')->name('orders.lab');
+    Route::get('/laboratorio', [OrderController::class, 'labQueue'])->middleware('biolab.permission:laboratory.view')->name('orders.lab');
     Route::get('/ordenes', [OrderController::class, 'index'])->middleware('biolab.permission:orders.view')->name('orders.index');
     Route::get('/ordenes/nueva', [OrderController::class, 'create'])->middleware('biolab.permission:orders.create')->name('orders.create');
     Route::post('/ordenes', [OrderController::class, 'store'])->middleware('biolab.permission:orders.create')->name('orders.store');
@@ -33,8 +33,8 @@ Route::middleware('biolab.auth')->group(function () {
     Route::post('/caja/{id}/anular', [CashController::class, 'void'])->middleware('biolab.permission:cash.manage')->name('cash.void');
     Route::get('/catalogos', [CatalogController::class, 'index'])->middleware('biolab.permission:catalogs.view')->name('catalog.index');
     Route::get('/catalogos/examenes/nuevo', [CatalogController::class, 'createExam'])->middleware('biolab.permission:catalogs.manage')->name('catalog.exam.create');
-    Route::post('/catalogos/referencias', [CatalogController::class, 'referrer'])->middleware('biolab.permission:catalogs.view,catalogs.manage')->name('catalog.referrer');
-    Route::post('/catalogos/precios', [CatalogController::class, 'price'])->middleware('biolab.permission:catalogs.manage')->name('catalog.price');
+    Route::post('/catalogos/referencias', [CatalogController::class, 'referrer'])->middleware('biolab.permission:catalogs.references,catalogs.manage')->name('catalog.referrer');
+    Route::post('/catalogos/precios', [CatalogController::class, 'price'])->middleware('biolab.permission:catalogs.prices,catalogs.manage')->name('catalog.price');
     Route::post('/catalogos/examenes', [CatalogController::class, 'exam'])->middleware('biolab.permission:catalogs.manage')->name('catalog.exam');
     Route::delete('/catalogos/examenes/{slug}', [CatalogController::class, 'deleteExam'])->middleware('biolab.permission:catalogs.manage')->name('catalog.exam.delete');
     Route::get('/historial', [LabController::class, 'history'])->middleware('biolab.permission:results.view')->name('lab.history');

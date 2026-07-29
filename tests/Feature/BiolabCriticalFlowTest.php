@@ -28,6 +28,53 @@ class BiolabCriticalFlowTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_laboratory_profile_does_not_show_or_access_billing_module(): void
+    {
+        $this->actingAsBiolab('laboratorio')
+            ->get('/')
+            ->assertOk()
+            ->assertDontSee('Registrar cobro');
+
+        $this->actingAsBiolab('laboratorio')
+            ->get('/ordenes/nueva')
+            ->assertForbidden();
+    }
+
+    public function test_non_laboratory_profiles_cannot_access_laboratory_queue(): void
+    {
+        $this->actingAsBiolab('recepcion')
+            ->get('/laboratorio')
+            ->assertForbidden();
+
+        $this->actingAsBiolab('caja')
+            ->get('/laboratorio')
+            ->assertForbidden();
+    }
+
+    public function test_cashier_profile_can_update_prices_but_not_manage_templates_or_references(): void
+    {
+        $this->actingAsBiolab('caja')
+            ->get('/catalogos')
+            ->assertOk()
+            ->assertSee('Precio base por examen')
+            ->assertSee('Guardar')
+            ->assertDontSee('Crear examen');
+
+        $this->actingAsBiolab('caja')
+            ->post('/catalogos/precios', ['slug' => 'hematologia', 'price' => 80])
+            ->assertRedirect();
+
+        $this->assertEqualsWithDelta(80.0, app(CatalogStore::class)->prices()['hematologia'], 0.001);
+
+        $this->actingAsBiolab('caja')
+            ->get('/catalogos/examenes/nuevo')
+            ->assertForbidden();
+
+        $this->actingAsBiolab('caja')
+            ->post('/catalogos/referencias', ['name' => 'CLINICA QA'])
+            ->assertForbidden();
+    }
+
     public function test_initial_payment_cannot_exceed_net_total(): void
     {
         $this->actingAsBiolab('recepcion')

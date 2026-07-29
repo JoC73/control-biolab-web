@@ -1,10 +1,19 @@
 @extends('layouts.lab', ['title' => 'Caja'])
 
 @section('body')
+    @php $auth = app(\App\Services\AuthStore::class); @endphp
+
     <main class="app-shell">
         <header class="topbar compact">
             <div><p class="eyebrow">Caja</p><h1>Ingresos y egresos</h1></div>
-            <div class="top-actions"><a class="button" href="{{ route('orders.index') }}">Ordenes</a></div>
+            <div class="top-actions">
+                @if ($auth->hasPermission('orders.view'))
+                    <a class="button" href="{{ route('orders.index') }}">Ordenes</a>
+                @endif
+                @if ($auth->hasPermission('catalogs.prices'))
+                    <a class="button primary" href="{{ route('catalog.index') }}">Precios</a>
+                @endif
+            </div>
         </header>
         @if (session('status'))<div class="status-message wide">{{ session('status') }}</div>@endif
         <section class="summary-grid">
@@ -19,18 +28,20 @@
                 <div class="filter-actions"><button class="button primary" type="submit">Filtrar</button><a class="button" href="{{ route('cash.index') }}">Hoy</a></div>
             </form>
         </section>
-        <section class="panel">
-            <div class="section-heading"><div><p class="eyebrow">Nuevo movimiento</p><h2>Registrar ingreso o egreso</h2></div></div>
-            <form class="filters" method="POST" action="{{ route('cash.store') }}">
-                @csrf
-                <div class="field"><label>Tipo</label><select name="type"><option value="income">Ingreso</option><option value="expense">Egreso</option></select></div>
-                <div class="field"><label>Fecha</label><input name="date" type="date" value="{{ $filters['date'] }}" required></div>
-                <div class="field"><label>Monto</label><input name="amount" type="number" min="0.01" step="0.01" required></div>
-                <div class="field"><label>Metodo</label><select name="method"><option value="efectivo">Efectivo</option><option value="transferencia">Transferencia</option><option value="tarjeta">Tarjeta</option></select></div>
-                <div class="field span-2"><label>Descripcion</label><input name="description" required></div>
-                <div class="filter-actions"><button class="button primary" type="submit">Guardar</button></div>
-            </form>
-        </section>
+        @if ($auth->hasPermission('cash.manage'))
+            <section class="panel">
+                <div class="section-heading"><div><p class="eyebrow">Nuevo movimiento</p><h2>Registrar ingreso o egreso</h2></div></div>
+                <form class="filters" method="POST" action="{{ route('cash.store') }}">
+                    @csrf
+                    <div class="field"><label>Tipo</label><select name="type"><option value="income">Ingreso</option><option value="expense">Egreso</option></select></div>
+                    <div class="field"><label>Fecha</label><input name="date" type="date" value="{{ $filters['date'] }}" required></div>
+                    <div class="field"><label>Monto</label><input name="amount" type="number" min="0.01" step="0.01" required></div>
+                    <div class="field"><label>Metodo</label><select name="method"><option value="efectivo">Efectivo</option><option value="transferencia">Transferencia</option><option value="tarjeta">Tarjeta</option></select></div>
+                    <div class="field span-2"><label>Descripcion</label><input name="description" required></div>
+                    <div class="filter-actions"><button class="button primary" type="submit">Guardar</button></div>
+                </form>
+            </section>
+        @endif
         <section class="panel cash-ledger-panel">
             <div class="section-heading">
                 <div>
@@ -63,14 +74,16 @@
                         <div class="amount-cell">Q {{ number_format($movement['amount'], 2) }}</div>
                         <div>{{ $movement['status'] === 'voided' ? 'Anulado' : 'Activo' }}</div>
                         <div>
-                            @if ($movement['status'] === 'active')
+                            @if ($movement['status'] === 'active' && $auth->hasPermission('cash.manage'))
                                 <form class="void-form" method="POST" action="{{ route('cash.void', $movement['id']) }}" onsubmit="return confirm('Deseas anular este movimiento?')">
                                     @csrf
                                     <input name="reason" placeholder="Motivo" required>
                                     <button class="button danger-button compact-button" type="submit">Anular</button>
                                 </form>
-                            @else
+                            @elseif ($movement['status'] !== 'active')
                                 <span class="void-reason">{{ $movement['void_reason'] }}</span>
+                            @else
+                                <span class="soft-badge">Sin accion</span>
                             @endif
                         </div>
                     </article>

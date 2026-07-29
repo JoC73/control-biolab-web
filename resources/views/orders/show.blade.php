@@ -2,6 +2,7 @@
 
 @section('body')
     @php
+        $auth = app(\App\Services\AuthStore::class);
         $balance = max(0, round((float) $order['total'] - (float) $order['paid_amount'], 2));
         $statusLabels = ['pending_results' => 'Pendiente resultado', 'ready' => 'Listo', 'delivered' => 'Entregado', 'cancelled' => 'Anulado'];
         $paymentLabels = ['unpaid' => 'Sin pago', 'partial' => 'Parcial', 'paid' => 'Pagado'];
@@ -22,14 +23,18 @@
             </div>
             <div class="top-actions">
                 <a class="button" href="{{ route('orders.index') }}">Ordenes</a>
-                @if ($order['status'] !== 'cancelled')
+                @if ($order['status'] !== 'cancelled' && ($auth->hasPermission('results.create') || $auth->hasPermission('results.edit')))
                     <a class="button" href="{{ route('orders.results', $order['id']) }}">Resultados</a>
                 @endif
-                <a class="button" href="{{ route('orders.pdf', $order['id']) }}">PDF</a>
-                @if ($whatsappUrl)
+                @if ($auth->hasPermission('results.print'))
+                    <a class="button" href="{{ route('orders.pdf', $order['id']) }}">PDF</a>
+                @endif
+                @if ($whatsappUrl && $auth->hasPermission('results.print'))
                     <a class="button" target="_blank" href="{{ $whatsappUrl }}">WhatsApp</a>
                 @endif
-                <a class="button primary" target="_blank" href="{{ route('orders.print', $order['id']) }}">Imprimir</a>
+                @if ($auth->hasPermission('results.print'))
+                    <a class="button primary" target="_blank" href="{{ route('orders.print', $order['id']) }}">Imprimir</a>
+                @endif
             </div>
         </header>
 
@@ -63,7 +68,7 @@
                         <p>Saldo pendiente: Q {{ number_format($balance, 2) }}</p>
                     </div>
                 </div>
-                @if ($balance > 0)
+                @if ($balance > 0 && $auth->hasPermission('payments.create'))
                     <form class="inline-form" method="POST" action="{{ route('orders.pay', $order['id']) }}">
                         @csrf
                         <input name="amount" type="hidden" value="{{ number_format($balance, 2, '.', '') }}">
@@ -75,6 +80,8 @@
                         </select>
                         <button class="button primary" type="submit" @disabled($order['status'] === 'cancelled')>Cobrar saldo</button>
                     </form>
+                @elseif ($balance > 0)
+                    <p class="empty-state">Saldo pendiente: Q {{ number_format($balance, 2) }}.</p>
                 @else
                     <p class="empty-state">Esta orden ya no tiene saldo pendiente.</p>
                 @endif
@@ -84,10 +91,12 @@
                     <div><p class="eyebrow">Control</p><h2>Estado</h2></div>
                 </div>
                 <div class="row-tools">
-                    <form method="POST" action="{{ route('orders.deliver', $order['id']) }}">
-                        @csrf
-                        <button class="button" type="submit" @disabled(! $canDeliver)>Marcar entregada</button>
-                    </form>
+                    @if ($auth->hasPermission('orders.deliver'))
+                        <form method="POST" action="{{ route('orders.deliver', $order['id']) }}">
+                            @csrf
+                            <button class="button" type="submit" @disabled(! $canDeliver)>Marcar entregada</button>
+                        </form>
+                    @endif
                     @if (! in_array($order['status'] ?? null, ['cancelled', 'delivered'], true) && ! $canDeliver)
                         <p class="empty-state">
                             @if ($balance > 0)
@@ -97,13 +106,13 @@
                             @endif
                         </p>
                     @endif
-                    @if ($order['status'] !== 'cancelled')
+                    @if ($order['status'] !== 'cancelled' && $auth->hasPermission('orders.cancel'))
                         <form method="POST" action="{{ route('orders.cancel', $order['id']) }}" onsubmit="return confirm('Deseas anular esta orden? Se registrara reverso en caja si tiene pagos.')">
                             @csrf
                             <input name="reason" placeholder="Motivo de anulacion" required>
                             <button class="button danger-button" type="submit">Anular</button>
                         </form>
-                    @else
+                    @elseif ($order['status'] === 'cancelled')
                         <p class="void-reason">Anulada: {{ $order['cancel_reason'] }}</p>
                     @endif
                 </div>
@@ -123,10 +132,10 @@
                             <em>{{ ($item['status'] ?? 'pending') === 'ready' ? 'Listo' : 'Pendiente' }}</em>
                         </a>
                         <div class="row-tools">
-                            @if ($order['status'] !== 'cancelled')
+                            @if ($order['status'] !== 'cancelled' && ($auth->hasPermission('results.create') || $auth->hasPermission('results.edit')))
                                 <a class="button" href="{{ route('orders.results', ['id' => $order['id'], 'exam' => $index]) }}">Resultados</a>
                             @endif
-                            @if (($item['status'] ?? 'pending') === 'ready' && ($order['payment_status'] ?? null) === 'paid')
+                            @if (($item['status'] ?? 'pending') === 'ready' && ($order['payment_status'] ?? null) === 'paid' && $auth->hasPermission('results.print'))
                                 <a class="button" href="{{ route('orders.pdf.exam', ['id' => $order['id'], 'exam' => $index]) }}">PDF individual</a>
                             @endif
                         </div>
