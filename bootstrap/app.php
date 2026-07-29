@@ -1,5 +1,8 @@
 <?php
 
+use App\Http\Middleware\RequireBiolabAuth;
+use App\Http\Middleware\RequireBiolabPermission;
+use App\Http\Middleware\RequireBiolabRole;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -12,8 +15,9 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
-            'biolab.auth' => \App\Http\Middleware\RequireBiolabAuth::class,
-            'biolab.role' => \App\Http\Middleware\RequireBiolabRole::class,
+            'biolab.auth' => RequireBiolabAuth::class,
+            'biolab.role' => RequireBiolabRole::class,
+            'biolab.permission' => RequireBiolabPermission::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

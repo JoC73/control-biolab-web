@@ -5,6 +5,7 @@ namespace App\Services;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 class AuthStore
@@ -14,6 +15,32 @@ class AuthStore
         'recepcion' => 'Recepcion',
         'laboratorio' => 'Laboratorio',
         'caja' => 'Caja',
+    ];
+
+    public const PERMISSION_LABELS = [
+        'orders.view' => 'Ver ordenes',
+        'orders.create' => 'Registrar cobros',
+        'orders.cancel' => 'Anular ordenes',
+        'orders.deliver' => 'Entregar resultados',
+        'payments.create' => 'Registrar pagos',
+        'cash.view' => 'Ver caja',
+        'cash.manage' => 'Gestionar caja',
+        'results.view' => 'Ver resultados',
+        'results.create' => 'Crear resultados',
+        'results.edit' => 'Editar resultados',
+        'results.print' => 'PDF e impresion',
+        'catalogs.view' => 'Ver catalogos',
+        'catalogs.manage' => 'Gestionar catalogos',
+        'users.view' => 'Ver usuarios',
+        'users.manage' => 'Gestionar usuarios',
+        'audit.view' => 'Ver auditoria',
+    ];
+
+    public const ROLE_PERMISSIONS = [
+        'admin' => ['*'],
+        'recepcion' => ['orders.view', 'orders.create', 'orders.deliver', 'payments.create', 'cash.view', 'catalogs.view', 'results.view', 'results.print'],
+        'laboratorio' => ['orders.view', 'results.view', 'results.create', 'results.edit', 'results.print', 'catalogs.view', 'catalogs.manage'],
+        'caja' => ['orders.view', 'orders.create', 'orders.cancel', 'payments.create', 'cash.view', 'cash.manage'],
     ];
 
     public const PERMISSIONS = [
@@ -27,7 +54,7 @@ class AuthStore
     {
         $user = Arr::first($this->users(), fn (array $user) => Str::lower($user['email']) === Str::lower($email));
 
-        if (! $user || ! hash_equals((string) $user['password'], $password)) {
+        if (! $user || ! $this->passwordMatches($user, $password)) {
             return null;
         }
 
@@ -55,6 +82,19 @@ class AuthStore
         $roles = Arr::wrap($roles);
 
         return $user['role'] === 'admin' || in_array($user['role'], $roles, true);
+    }
+
+    public function hasPermission(string $permission): bool
+    {
+        $user = $this->current();
+
+        if (! $user) {
+            return false;
+        }
+
+        $permissions = self::ROLE_PERMISSIONS[$user['role']] ?? [];
+
+        return in_array('*', $permissions, true) || in_array($permission, $permissions, true);
     }
 
     public function users(): array
@@ -149,7 +189,7 @@ class AuthStore
             DB::table('biolab_users')->insert([
                 'name' => $user['name'],
                 'email' => $user['email'],
-                'password' => $user['password'],
+                'password' => Hash::make($user['password']),
                 'role' => $user['role'],
                 'created_at' => now(),
                 'updated_at' => now(),
@@ -170,5 +210,54 @@ class AuthStore
     private function usesDatabase(): bool
     {
         return config('database.default') !== 'sqlite' && config('biolab.storage') === 'database';
+    }
+
+    private function passwordMatches(array $user, string $password): bool
+    {
+        $stored = (string) $user['password'];
+
+        try {
+            if (Hash::check($password, $stored)) {
+                if (Hash::needsRehash($stored)) {
+                    $this->updateStoredPassword($user['email'], Hash::make($password));
+                }
+
+                return true;
+            }
+        } catch (\RuntimeException) {
+            //
+        }
+
+        if (hash_equals($stored, $password)) {
+            $this->updateStoredPassword($user['email'], Hash::make($password));
+
+            return true;
+        }
+
+        return false;
+    }
+
+    private function updateStoredPassword(string $email, string $hash): void
+    {
+        if ($this->usesDatabase()) {
+            DB::table('biolab_users')
+                ->whereRaw('LOWER(email) = ?', [Str::lower($email)])
+                ->update(['password' => $hash, 'updated_at' => now()]);
+
+            return;
+        }
+
+        $users = collect($this->storedUsers())
+            ->map(function (array $user) use ($email, $hash) {
+                if (Str::lower($user['email']) === Str::lower($email)) {
+                    $user['password'] = $hash;
+                }
+
+                return $user;
+            })
+            ->values()
+            ->all();
+
+        $this->persistUsers($users);
     }
 }

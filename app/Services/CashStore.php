@@ -104,6 +104,10 @@ class CashStore extends JsonStore
                 return null;
             }
 
+            if (($record->status ?? null) === 'voided') {
+                return $this->fromRow($record);
+            }
+
             DB::table('cash_movements')->where('id', $id)->update([
                 'status' => 'voided',
                 'void_reason' => $reason,
@@ -124,6 +128,11 @@ class CashStore extends JsonStore
                 continue;
             }
 
+            if (($record['status'] ?? null) === 'voided') {
+                $updated = $record;
+                break;
+            }
+
             $record['status'] = 'voided';
             $record['void_reason'] = $reason;
             $record['voided_at'] = now()->toDateTimeString();
@@ -136,6 +145,20 @@ class CashStore extends JsonStore
         }
 
         return $updated;
+    }
+
+    public function hasOrderReversal(string $orderId): bool
+    {
+        if ($this->usesDatabase()) {
+            return DB::table('cash_movements')
+                ->where('order_id', $orderId)
+                ->where('source', 'order_cancel_reversal')
+                ->exists();
+        }
+
+        return $this->all()
+            ->contains(fn (array $movement) => ($movement['order_id'] ?? null) === $orderId
+                && ($movement['source'] ?? null) === 'order_cancel_reversal');
     }
 
     protected function path(): string

@@ -11,15 +11,15 @@ class UserPermissionController extends Controller
     public function __construct(
         private readonly AuthStore $auth,
         private readonly AuditStore $audit,
-    ) {
-    }
+    ) {}
 
     public function index()
     {
         return view('admin.users', [
             'users' => $this->auth->users(),
             'roles' => AuthStore::ROLES,
-            'permissions' => AuthStore::PERMISSIONS,
+            'permissions' => AuthStore::ROLE_PERMISSIONS,
+            'permissionLabels' => AuthStore::PERMISSION_LABELS,
         ]);
     }
 

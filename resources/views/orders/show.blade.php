@@ -25,7 +25,7 @@
                     <a class="button" href="{{ route('orders.results', $order['id']) }}">Resultados</a>
                 @endif
                 <a class="button" href="{{ route('orders.pdf', $order['id']) }}">PDF</a>
-                @if (!empty($order['phone']))
+                @if ($whatsappUrl)
                     <a class="button" target="_blank" href="{{ $whatsappUrl }}">WhatsApp</a>
                 @endif
                 <a class="button primary" target="_blank" href="{{ route('orders.print', $order['id']) }}">Imprimir</a>

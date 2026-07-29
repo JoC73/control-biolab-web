@@ -11,8 +11,7 @@ class AuthController extends Controller
     public function __construct(
         private readonly AuthStore $auth,
         private readonly AuditStore $audit,
-    ) {
-    }
+    ) {}
 
     public function showLogin()
     {

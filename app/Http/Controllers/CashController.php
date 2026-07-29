@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Services\CashStore;
 use App\Services\AuditStore;
+use App\Services\CashStore;
 use Illuminate\Http\Request;
 
 class CashController extends Controller
@@ -11,9 +11,7 @@ class CashController extends Controller
     public function __construct(
         private readonly CashStore $cash,
         private readonly AuditStore $audit,
-    )
-    {
-    }
+    ) {}
 
     public function index(Request $request)
     {

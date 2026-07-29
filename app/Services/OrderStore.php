@@ -5,6 +5,7 @@ namespace App\Services;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class OrderStore extends JsonStore
 {
@@ -128,6 +129,21 @@ class OrderStore extends JsonStore
     public function addPayment(string $id, float $amount, string $method): ?array
     {
         return $this->update($id, function (array $order) use ($amount, $method) {
+            if (($order['status'] ?? null) === 'cancelled') {
+                throw ValidationException::withMessages(['amount' => 'No se puede cobrar una orden anulada.']);
+            }
+
+            $balance = max(0, round((float) $order['total'] - (float) $order['paid_amount'], 2));
+            $amount = round($amount, 2);
+
+            if ($balance <= 0) {
+                throw ValidationException::withMessages(['amount' => 'Esta orden ya esta pagada.']);
+            }
+
+            if ($amount !== $balance) {
+                throw ValidationException::withMessages(['amount' => 'El cobro debe ser exactamente el saldo pendiente de Q '.number_format($balance, 2).'.']);
+            }
+
             $order['paid_amount'] = round((float) ($order['paid_amount'] ?? 0) + $amount, 2);
             $order['payment_method'] = $method;
             $order['payment_status'] = $this->paymentStatus((float) $order['total'], (float) $order['paid_amount']);
@@ -150,7 +166,7 @@ class OrderStore extends JsonStore
     {
         return $this->update($id, function (array $order) use ($reason) {
             if (($order['status'] ?? null) === 'cancelled') {
-                return $order;
+                throw ValidationException::withMessages(['reason' => 'Esta orden ya fue anulada.']);
             }
 
             $order['status'] = 'cancelled';
@@ -169,7 +185,8 @@ class OrderStore extends JsonStore
     private function update(string $id, callable $callback): ?array
     {
         if ($this->usesDatabase()) {
-            $current = $this->find($id);
+            $row = DB::table('operational_orders')->where('id', $id)->lockForUpdate()->first();
+            $current = $row ? $this->fromRow($row) : null;
 
             if (! $current) {
                 return null;
@@ -216,6 +233,11 @@ class OrderStore extends JsonStore
         }
 
         return $paid >= $total ? 'paid' : 'partial';
+    }
+
+    public function usesDatabaseStorage(): bool
+    {
+        return $this->usesDatabase();
     }
 
     private function usesDatabase(): bool

@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Services\CatalogStore;
 use App\Services\AuditStore;
+use App\Services\CatalogStore;
 use App\Services\LabResultStore;
 use App\Services\OrderStore;
 use Dompdf\Dompdf;
@@ -19,9 +19,7 @@ class LabController extends Controller
         private readonly CatalogStore $catalog,
         private readonly AuditStore $audit,
         private readonly OrderStore $orders,
-    )
-    {
-    }
+    ) {}
 
     public function index()
     {
@@ -150,7 +148,7 @@ class LabController extends Controller
         $payload['signatureDataUri'] = $this->assetDataUri(public_path('assets/firma-biolab-pdf.jpg'), 'image/jpeg');
         $html = view('lab.pdf', $payload)->render();
 
-        $options = new Options();
+        $options = new Options;
         $options->set('defaultFont', 'DejaVu Sans');
         $options->set('isRemoteEnabled', false);
 

@@ -36,7 +36,7 @@
                             <span>{{ $user['email'] }}</span>
                             <div class="badge-line">
                                 @foreach ($permissions[$user['role']] ?? [] as $permission)
-                                    <span class="soft-badge">{{ $permission }}</span>
+                                    <span class="soft-badge">{{ $permission === '*' ? 'Acceso total' : ($permissionLabels[$permission] ?? $permission) }}</span>
                                 @endforeach
                             </div>
                         </div>

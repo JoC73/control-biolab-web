@@ -9,9 +9,7 @@ use Illuminate\Support\Str;
 
 class AuditController extends Controller
 {
-    public function __construct(private readonly AuditStore $audit)
-    {
-    }
+    public function __construct(private readonly AuditStore $audit) {}
 
     public function index(Request $request)
     {

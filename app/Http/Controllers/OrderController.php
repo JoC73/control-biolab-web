@@ -2,15 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\AuditStore;
 use App\Services\CashStore;
 use App\Services\CatalogStore;
-use App\Services\AuditStore;
 use App\Services\LabResultStore;
 use App\Services\OrderStore;
 use Dompdf\Dompdf;
 use Dompdf\Options;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class OrderController extends Controller
@@ -21,8 +22,7 @@ class OrderController extends Controller
         private readonly CashStore $cash,
         private readonly AuditStore $audit,
         private readonly LabResultStore $results,
-    ) {
-    }
+    ) {}
 
     public function index(Request $request)
     {
@@ -83,23 +83,15 @@ class OrderController extends Controller
                 ->withInput();
         }
 
-        $order = $this->orders->create($data, $category);
+        [$order, $movement] = $this->runAtomic(fn () => $this->createOrderWithInitialPayment($data, $category));
+
         $this->audit->record('order_created', 'order', $order['id'], [
             'patient' => $order['patient_name'],
             'total' => $order['total'],
             'paid' => $order['paid_amount'],
         ]);
 
-        if ((float) ($data['paid_amount'] ?? 0) > 0) {
-            $movement = $this->cash->create([
-                'type' => 'income',
-                'date' => $data['date'],
-                'amount' => (float) $data['paid_amount'],
-                'method' => $data['payment_method'],
-                'description' => 'Pago de orden '.$order['id'].' - '.$order['patient_name'],
-                'order_id' => $order['id'],
-                'source' => 'order_payment',
-            ]);
+        if ($movement) {
             $this->audit->record('cash_income_from_order', 'cash', $movement['id'], ['order_id' => $order['id']]);
         }
 
@@ -113,7 +105,7 @@ class OrderController extends Controller
 
         return view('orders.show', [
             'order' => $order,
-            'whatsappUrl' => $this->whatsappUrl($order),
+            'whatsappUrl' => $this->canShareResults($order) ? $this->whatsappUrl($order) : null,
         ]);
     }
 
@@ -176,17 +168,22 @@ class OrderController extends Controller
             return back()->withErrors(['amount' => 'El cobro debe ser exactamente el saldo pendiente de Q '.number_format($balance, 2).'.']);
         }
 
-        $updated = $this->orders->addPayment($id, $amount, $data['method']);
+        [$updated, $movement] = $this->runAtomic(function () use ($id, $amount, $data, $order) {
+            $updated = $this->orders->addPayment($id, $amount, $data['method']);
+            abort_if($updated === null, 404);
 
-        $movement = $this->cash->create([
-            'type' => 'income',
-            'date' => now()->toDateString(),
-            'amount' => $amount,
-            'method' => $data['method'],
-            'description' => 'Abono de orden '.$id.' - '.$order['patient_name'],
-            'order_id' => $id,
-            'source' => 'order_payment',
-        ]);
+            $movement = $this->cash->create([
+                'type' => 'income',
+                'date' => now()->toDateString(),
+                'amount' => $amount,
+                'method' => $data['method'],
+                'description' => 'Abono de orden '.$id.' - '.$order['patient_name'],
+                'order_id' => $id,
+                'source' => 'order_payment',
+            ]);
+
+            return [$updated, $movement];
+        });
         $this->audit->record('order_payment_added', 'order', $id, ['amount' => $amount, 'movement_id' => $movement['id']]);
 
         return redirect()->route('orders.show', $id)->with('status', 'Pago registrado. Estado: '.$this->paymentStatusLabel($updated['payment_status']));
@@ -201,6 +198,10 @@ class OrderController extends Controller
 
         if (($order['payment_status'] ?? null) !== 'paid' || $balance > 0) {
             return back()->withErrors(['delivery' => 'No se puede entregar: saldo pendiente Q '.number_format($balance, 2).'.']);
+        }
+
+        if (($order['status'] ?? null) === 'delivered') {
+            return back()->withErrors(['delivery' => 'Esta orden ya fue entregada.']);
         }
 
         if (($order['status'] ?? null) !== 'ready') {
@@ -223,19 +224,34 @@ class OrderController extends Controller
         $order = $this->orders->find($id);
         abort_if($order === null, 404);
 
-        $data = $request->validate(['reason' => ['required', 'string', 'max:240']]);
-        $updated = $this->orders->cancel($id, $data['reason']);
+        if (($order['status'] ?? null) === 'cancelled') {
+            return back()->withErrors(['reason' => 'Esta orden ya fue anulada.']);
+        }
 
-        if ((float) ($order['paid_amount'] ?? 0) > 0) {
-            $movement = $this->cash->create([
-                'type' => 'expense',
-                'date' => now()->toDateString(),
-                'amount' => (float) $order['paid_amount'],
-                'method' => $order['payment_method'] ?? 'efectivo',
-                'description' => 'Reverso por anulacion de orden '.$id.' - '.$order['patient_name'],
-                'order_id' => $id,
-                'source' => 'order_cancel_reversal',
-            ]);
+        $data = $request->validate(['reason' => ['required', 'string', 'max:240']]);
+
+        [$updated, $movement] = $this->runAtomic(function () use ($id, $data, $order) {
+            $updated = $this->orders->cancel($id, $data['reason']);
+            abort_if($updated === null, 404);
+
+            $movement = null;
+
+            if ((float) ($updated['paid_amount'] ?? 0) > 0 && ! $this->cash->hasOrderReversal($id)) {
+                $movement = $this->cash->create([
+                    'type' => 'expense',
+                    'date' => now()->toDateString(),
+                    'amount' => (float) $updated['paid_amount'],
+                    'method' => $updated['payment_method'] ?? 'efectivo',
+                    'description' => 'Reverso por anulacion de orden '.$id.' - '.$order['patient_name'],
+                    'order_id' => $id,
+                    'source' => 'order_cancel_reversal',
+                ]);
+            }
+
+            return [$updated, $movement];
+        });
+
+        if ($movement) {
             $this->audit->record('cash_reversal_from_order_cancel', 'cash', $movement['id'], ['order_id' => $id]);
         }
 
@@ -252,6 +268,7 @@ class OrderController extends Controller
     {
         $order = $this->orders->find($id);
         abort_if($order === null, 404);
+        $this->ensurePrintableOrder($order);
 
         return $this->pdfResponse($order, 'attachment');
     }
@@ -260,6 +277,7 @@ class OrderController extends Controller
     {
         $order = $this->orders->find($id);
         abort_if($order === null, 404);
+        $this->ensurePrintableOrder($order);
 
         return $this->pdfResponse($order, 'inline');
     }
@@ -269,12 +287,59 @@ class OrderController extends Controller
         return Arr::first($this->catalog->categories(), fn (array $category) => $category['slug'] === $slug);
     }
 
+    private function createOrderWithInitialPayment(array $data, array $category): array
+    {
+        $order = $this->orders->create($data, $category);
+        $movement = null;
+
+        if ((float) ($data['paid_amount'] ?? 0) > 0) {
+            $movement = $this->cash->create([
+                'type' => 'income',
+                'date' => $data['date'],
+                'amount' => (float) $data['paid_amount'],
+                'method' => $data['payment_method'],
+                'description' => 'Pago de orden '.$order['id'].' - '.$order['patient_name'],
+                'order_id' => $order['id'],
+                'source' => 'order_payment',
+            ]);
+        }
+
+        return [$order, $movement];
+    }
+
+    private function runAtomic(callable $callback): mixed
+    {
+        if ($this->orders->usesDatabaseStorage()) {
+            return DB::transaction($callback);
+        }
+
+        return $callback();
+    }
+
     private function whatsappUrl(array $order): string
     {
         $phone = preg_replace('/\D+/', '', $order['phone'] ?? '');
         $message = 'Hola '.$order['patient_name'].', sus resultados de Laboratorio BIOLAB estan listos. Puede pasar por ellos o solicitar el PDF.';
 
         return 'https://wa.me/'.$phone.'?text='.rawurlencode($message);
+    }
+
+    private function canShareResults(array $order): bool
+    {
+        return in_array($order['status'] ?? null, ['ready', 'delivered'], true)
+            && ($order['payment_status'] ?? null) === 'paid'
+            && $this->orderHasAnyResult($order);
+    }
+
+    private function ensurePrintableOrder(array $order): void
+    {
+        if (($order['status'] ?? null) === 'cancelled') {
+            abort(403, 'No se puede imprimir una orden anulada.');
+        }
+
+        if (! $this->canShareResults($order)) {
+            abort(403, 'No se puede imprimir: la orden debe estar pagada y con resultados listos.');
+        }
     }
 
     private function reportPayload(array $order): array
@@ -304,7 +369,7 @@ class OrderController extends Controller
     private function pdfResponse(array $order, string $disposition)
     {
         $html = view('orders.pdf', $this->reportPayload($order))->render();
-        $options = new Options();
+        $options = new Options;
         $options->set('defaultFont', 'DejaVu Sans');
         $pdf = new Dompdf($options);
         $pdf->setPaper('letter');

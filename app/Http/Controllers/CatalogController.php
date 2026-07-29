@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Services\CatalogStore;
 use App\Services\AuditStore;
+use App\Services\CatalogStore;
 use Illuminate\Http\Request;
 
 class CatalogController extends Controller
@@ -11,9 +11,7 @@ class CatalogController extends Controller
     public function __construct(
         private readonly CatalogStore $catalog,
         private readonly AuditStore $audit,
-    )
-    {
-    }
+    ) {}
 
     public function index()
     {
