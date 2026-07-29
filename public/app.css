@@ -276,6 +276,7 @@ a {
     align-items: center;
     padding: 14px 16px;
     border-color: transparent;
+    background: linear-gradient(135deg, #475569, #334155);
     color: #fff;
     overflow: hidden;
     transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease, filter .15s ease;
@@ -315,14 +316,17 @@ a {
 .category-hormonas { background: linear-gradient(135deg, #7c3aed, #5b21b6); }
 .category-coagulacion { background: linear-gradient(135deg, #be123c, #8f1232); }
 .category-bacteriologia { background: linear-gradient(135deg, #047857, #065f46); }
+.category-bacterologia { background: linear-gradient(135deg, #047857, #065f46); }
 .category-micologia { background: linear-gradient(135deg, #4f46e5, #3730a3); }
 .category-inmunoglobulinas { background: linear-gradient(135deg, #0369a1, #075985); }
+.category-inmunoglobina { background: linear-gradient(135deg, #0369a1, #075985); }
 .category-enfermedades-infecciosas { background: linear-gradient(135deg, #c2410c, #9a3412); }
 .category-inmunohematologia { background: linear-gradient(135deg, #0e7490, #155e75); }
 .category-metabolismo { background: linear-gradient(135deg, #15803d, #166534); }
 .category-pancreaticas { background: linear-gradient(135deg, #a16207, #854d0e); }
 .category-cardiacas { background: linear-gradient(135deg, #dc2626, #991b1b); }
 .category-prostaticas { background: linear-gradient(135deg, #4338ca, #312e81); }
+.category-prostatica { background: linear-gradient(135deg, #4338ca, #312e81); }
 .category-electrolitos { background: linear-gradient(135deg, #0f766e, #115e59); }
 .category-marcadores-tumorales { background: linear-gradient(135deg, #86198f, #701a75); }
 .category-otros { background: linear-gradient(135deg, #475569, #334155); }
