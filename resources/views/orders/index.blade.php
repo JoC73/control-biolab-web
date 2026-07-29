@@ -53,15 +53,30 @@
         <section class="panel">
             <div class="history-list">
                 @forelse ($orders as $order)
-                    @php $examCount = count($order['exam_items'] ?? []); @endphp
+                    @php
+                        $examItems = $order['exam_items'] ?? [];
+                        $examCount = count($examItems);
+                        $examNames = collect($examItems)->pluck('name')->filter()->take(3)->implode(', ');
+                        $balance = max(0, (float) $order['total'] - (float) $order['paid_amount']);
+                    @endphp
                     <article class="history-row">
                         <a href="{{ route('orders.show', $order['id']) }}">
                             <strong>{{ $order['patient_name'] }}</strong>
-                            <span>{{ $examCount > 1 ? $examCount.' examenes' : $order['category_name'] }} · {{ \Illuminate\Support\Carbon::parse($order['date'])->format('d/m/Y') }}</span>
+                            <span>
+                                {{ $examCount > 1 ? $examCount.' examenes' : $order['category_name'] }}
+                                @if ($examCount > 1 && $examNames)
+                                    · {{ $examNames }}{{ $examCount > 3 ? '...' : '' }}
+                                @endif
+                                · {{ \Illuminate\Support\Carbon::parse($order['date'])->format('d/m/Y') }}
+                            </span>
                             <em>{{ $order['referrer'] ?: 'Sin referencia' }}</em>
                             <span class="badge-line">
                                 <span class="status-badge status-{{ $order['status'] }}">{{ $statusLabels[$order['status']] ?? $order['status'] }}</span>
                                 <span class="status-badge pay-{{ $order['payment_status'] }}">{{ $paymentLabels[$order['payment_status']] ?? $order['payment_status'] }}</span>
+                                <span class="soft-badge">Total Q {{ number_format($order['total'], 2) }}</span>
+                                @if ($balance > 0)
+                                    <span class="soft-badge">Saldo Q {{ number_format($balance, 2) }}</span>
+                                @endif
                             </span>
                         </a>
                         <div class="row-tools">

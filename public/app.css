@@ -638,6 +638,7 @@ button,
 .soft-badge {
     display: inline-flex;
     align-items: center;
+    flex: 0 0 auto;
     min-height: 26px;
     padding: 0 8px;
     border: 1px solid var(--line);
@@ -646,6 +647,126 @@ button,
     color: #526173;
     font-size: .75rem;
     font-weight: 900;
+}
+
+.exam-summary-pills {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.exam-picker-toolbar {
+    display: grid;
+    grid-template-columns: minmax(220px, 320px) minmax(0, 1fr);
+    gap: 14px;
+    align-items: end;
+    margin-bottom: 14px;
+}
+
+.selected-exams {
+    min-height: 40px;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 7px 9px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #f9fcfd;
+}
+
+.selected-exams span {
+    display: inline-flex;
+    align-items: center;
+    min-height: 24px;
+    padding: 0 8px;
+    border-radius: 999px;
+    background: var(--soft);
+    color: #165d4b;
+    font-size: .78rem;
+    font-weight: 900;
+}
+
+.selected-exams em {
+    color: var(--muted);
+    font-style: normal;
+    font-size: .88rem;
+}
+
+.exam-picker-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 10px;
+}
+
+.exam-option-card {
+    position: relative;
+    display: grid;
+    grid-template-columns: 28px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    min-height: 68px;
+    margin: 0;
+    padding: 12px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #fff;
+    cursor: pointer;
+    transition: border-color .15s ease, background-color .15s ease, box-shadow .15s ease, transform .15s ease;
+}
+
+.exam-option-card:hover,
+.exam-option-card:has(.exam-checkbox:focus-visible) {
+    border-color: #94c8dc;
+    background: #f8fcfd;
+    box-shadow: 0 8px 18px rgba(15, 101, 151, .08);
+    transform: translateY(-1px);
+}
+
+.exam-option-card:has(.exam-checkbox:checked) {
+    border-color: var(--blue);
+    background: #eef8fc;
+    box-shadow: inset 3px 0 0 var(--blue);
+}
+
+.exam-checkbox {
+    width: 22px;
+    min-height: 22px;
+    margin: 0;
+    padding: 0;
+    accent-color: var(--blue);
+}
+
+.exam-option-main {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+}
+
+.exam-option-main strong {
+    overflow-wrap: anywhere;
+    line-height: 1.18;
+}
+
+.exam-option-main small {
+    color: var(--muted);
+    font-size: .78rem;
+}
+
+.exam-price {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 70px;
+    min-height: 30px;
+    padding: 0 9px;
+    border-radius: 999px;
+    background: #f1f7fa;
+    color: #123a56;
+    font-weight: 900;
+    white-space: nowrap;
 }
 
 .row-actions {
@@ -1132,6 +1253,7 @@ small {
 .status-badge {
     display: inline-flex;
     align-items: center;
+    flex: 0 0 auto;
     min-height: 24px;
     padding: 0 8px;
     border: 1px solid var(--line);
@@ -1216,6 +1338,10 @@ button:disabled,
     background: #fff;
 }
 
+.history-row > a {
+    min-width: 0;
+}
+
 .compact-list .history-row {
     grid-template-columns: 1fr;
 }
@@ -1233,6 +1359,12 @@ button:disabled,
 .history-row span {
     margin-top: 4px;
     color: var(--muted);
+}
+
+.history-row .badge-line,
+.history-row .status-badge,
+.history-row .soft-badge {
+    width: fit-content;
 }
 
 .history-row em {
@@ -1316,6 +1448,10 @@ button:disabled,
 .cash-row strong,
 .cash-row span {
     display: block;
+}
+
+.cash-row strong {
+    overflow-wrap: anywhere;
 }
 
 .cash-row span:not(.soft-badge) {
@@ -1434,8 +1570,26 @@ button:disabled,
     .user-permission-card,
     .two-column,
     .catalog-board,
-    .exam-builder-head {
+    .exam-builder-head,
+    .exam-picker-toolbar {
         grid-template-columns: 1fr;
+    }
+
+    .exam-summary-pills {
+        justify-content: flex-start;
+    }
+
+    .exam-picker-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .exam-option-card {
+        grid-template-columns: 26px minmax(0, 1fr);
+    }
+
+    .exam-price {
+        grid-column: 2;
+        width: fit-content;
     }
 
     .catalog-inline-form,

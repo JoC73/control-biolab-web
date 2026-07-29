@@ -67,16 +67,29 @@
                         <p class="eyebrow">Examenes</p>
                         <h2>Selecciona uno o varios examenes</h2>
                     </div>
-                    <span class="soft-badge" data-exam-count>{{ count($selectedExamSlugs) }} seleccionado{{ count($selectedExamSlugs) === 1 ? '' : 's' }}</span>
+                    <div class="exam-summary-pills">
+                        <span class="soft-badge" data-exam-count>{{ count($selectedExamSlugs) }} seleccionado{{ count($selectedExamSlugs) === 1 ? '' : 's' }}</span>
+                        <span class="soft-badge">Subtotal Q <strong data-exam-subtotal>{{ number_format($initialPrice, 2) }}</strong></span>
+                    </div>
                 </div>
-                <div class="catalog-grid compact-exam-picker">
+                <div class="exam-picker-toolbar">
+                    <div class="field">
+                        <label for="exam_search">Buscar examen</label>
+                        <input id="exam_search" type="search" placeholder="Nombre del examen" data-exam-search>
+                    </div>
+                    <div class="selected-exams" data-selected-exams></div>
+                </div>
+                <div class="exam-picker-grid">
                     @foreach ($categories as $category)
                         @php $examPrice = (float) ($prices[$category['slug']] ?? 0); @endphp
-                        <label class="catalog-card selectable-card">
-                            <input type="checkbox" name="exam_slugs[]" value="{{ $category['slug'] }}" data-exam-option data-price="{{ $examPrice }}" @checked(in_array($category['slug'], $selectedExamSlugs, true))>
+                        <label class="exam-option-card">
+                            <input class="exam-checkbox" type="checkbox" name="exam_slugs[]" value="{{ $category['slug'] }}" data-exam-option data-price="{{ $examPrice }}" data-exam-label="{{ $category['name'] }}" @checked(in_array($category['slug'], $selectedExamSlugs, true))>
                             <input type="hidden" name="exam_prices[{{ $category['slug'] }}]" value="{{ number_format($examPrice, 2, '.', '') }}">
-                            <strong>{{ $category['name'] }}</strong>
-                            <span>Q {{ number_format($examPrice, 2) }}</span>
+                            <span class="exam-option-main">
+                                <strong>{{ $category['name'] }}</strong>
+                                <small>{{ count($category['tests']) ?: 'Pendiente' }} pruebas base</small>
+                            </span>
+                            <span class="exam-price">Q {{ number_format($examPrice, 2) }}</span>
                         </label>
                     @endforeach
                 </div>
@@ -132,6 +145,9 @@
             const exams = Array.from(document.querySelectorAll('[data-exam-option]'));
             const primaryExam = document.querySelector('[data-primary-exam]');
             const examCount = document.querySelector('[data-exam-count]');
+            const examSubtotal = document.querySelector('[data-exam-subtotal]');
+            const selectedExams = document.querySelector('[data-selected-exams]');
+            const examSearch = document.querySelector('[data-exam-search]');
             const price = document.querySelector('[data-price]');
             const discount = document.querySelector('[data-discount]');
             const paid = document.querySelector('[data-paid]');
@@ -146,12 +162,35 @@
                 price.value = subtotal.toFixed(2);
                 if (primaryExam) primaryExam.value = selected[0]?.value || '';
                 if (examCount) examCount.textContent = `${selected.length} seleccionado${selected.length === 1 ? '' : 's'}`;
+                if (examSubtotal) examSubtotal.textContent = subtotal.toFixed(2);
+                if (selectedExams) {
+                    selectedExams.replaceChildren();
+                    if (selected.length) {
+                        selected.forEach((exam) => {
+                            const item = document.createElement('span');
+                            item.textContent = exam.dataset.examLabel || exam.value;
+                            selectedExams.appendChild(item);
+                        });
+                    } else {
+                        const empty = document.createElement('em');
+                        empty.textContent = 'Sin examenes seleccionados';
+                        selectedExams.appendChild(empty);
+                    }
+                }
 
                 const netTotal = Math.max(0, subtotal - numericValue(discount));
                 const paidAmount = Math.max(0, numericValue(paid));
 
                 total.value = netTotal.toFixed(2);
                 balance.value = Math.max(0, netTotal - paidAmount).toFixed(2);
+            };
+            const filterExams = () => {
+                const term = String(examSearch?.value || '').trim().toLowerCase();
+                exams.forEach((exam) => {
+                    const card = exam.closest('.exam-option-card');
+                    const label = String(exam.dataset.examLabel || '').toLowerCase();
+                    if (card) card.hidden = term !== '' && ! label.includes(term);
+                });
             };
             const scheduleUpdate = () => {
                 update();
@@ -160,6 +199,7 @@
                 setTimeout(update, 250);
             };
             exams.forEach((exam) => exam.addEventListener('change', scheduleUpdate));
+            examSearch?.addEventListener('input', filterExams);
             [discount, paid].forEach((field) => {
                 field.addEventListener('focus', () => field.select());
                 field.addEventListener('input', scheduleUpdate);

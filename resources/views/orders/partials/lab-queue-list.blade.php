@@ -5,11 +5,18 @@
             $paymentLabels = ['unpaid' => 'Sin pago', 'partial' => 'Parcial', 'paid' => 'Pagado'];
             $examItems = $order['exam_items'] ?? [];
             $pendingExams = collect($examItems)->where('status', '!=', 'ready')->count();
+            $examNames = collect($examItems)->pluck('name')->filter()->take(3)->implode(', ');
         @endphp
         <article class="history-row lab-queue-row">
             <a href="{{ route('orders.show', $order['id']) }}">
                 <strong>{{ $order['patient_name'] }}</strong>
-                <span>{{ count($examItems) > 1 ? count($examItems).' examenes' : $order['category_name'] }} · {{ \Illuminate\Support\Carbon::parse($order['date'])->format('d/m/Y') }}</span>
+                <span>
+                    {{ count($examItems) > 1 ? count($examItems).' examenes' : $order['category_name'] }}
+                    @if (count($examItems) > 1 && $examNames)
+                        · {{ $examNames }}{{ count($examItems) > 3 ? '...' : '' }}
+                    @endif
+                    · {{ \Illuminate\Support\Carbon::parse($order['date'])->format('d/m/Y') }}
+                </span>
                 <em>{{ $order['referrer'] ?: 'Sin referencia' }}</em>
                 <span class="badge-line">
                     <span class="status-badge pay-{{ $order['payment_status'] }}">{{ $paymentLabels[$order['payment_status']] ?? $order['payment_status'] }}</span>
