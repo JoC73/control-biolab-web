@@ -47,6 +47,32 @@ class CashStore extends JsonStore
         ];
     }
 
+    public function monthlyTotals(string $month): array
+    {
+        $month = preg_match('/^\d{4}-\d{2}$/', $month) ? $month : now()->format('Y-m');
+
+        $rows = $this->search()
+            ->filter(fn (array $movement) => str_starts_with((string) ($movement['date'] ?? ''), $month))
+            ->values();
+
+        $valid = $rows->where('status', 'active');
+        $incomeRows = $valid->where('type', 'income');
+        $expenseRows = $valid->where('type', 'expense');
+
+        $income = (float) $incomeRows->sum('amount');
+        $expense = (float) $expenseRows->sum('amount');
+
+        return [
+            'month' => $month,
+            'income' => $income,
+            'expense' => $expense,
+            'balance' => $income - $expense,
+            'income_count' => $incomeRows->count(),
+            'expense_count' => $expenseRows->count(),
+            'voided_count' => $rows->where('status', 'voided')->count(),
+        ];
+    }
+
     public function create(array $data): array
     {
         if ($this->usesDatabase()) {

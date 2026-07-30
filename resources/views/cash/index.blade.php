@@ -16,6 +16,31 @@
             </div>
         </header>
         @if (session('status'))<div class="status-message wide">{{ session('status') }}</div>@endif
+
+        <section class="panel monthly-cash-panel">
+            <div class="section-heading">
+                <div>
+                    <p class="eyebrow">Resumen mensual</p>
+                    <h2>{{ \Illuminate\Support\Carbon::createFromFormat('Y-m', $monthlyTotals['month'])->translatedFormat('F Y') }}</h2>
+                </div>
+                <form class="month-filter" method="GET" action="{{ route('cash.index') }}">
+                    <input type="hidden" name="date" value="{{ $filters['date'] }}">
+                    @if ($filters['type'])
+                        <input type="hidden" name="type" value="{{ $filters['type'] }}">
+                    @endif
+                    <label for="month">Mes</label>
+                    <input id="month" name="month" type="month" value="{{ $filters['month'] }}">
+                    <button class="button primary compact-button" type="submit">Ver mes</button>
+                </form>
+            </div>
+            <div class="summary-grid monthly-summary-grid">
+                <article><span>Q {{ number_format($monthlyTotals['income'], 2) }}</span><p>Ingresos del mes · {{ $monthlyTotals['income_count'] }} mov.</p></article>
+                <article><span>Q {{ number_format($monthlyTotals['expense'], 2) }}</span><p>Egresos del mes · {{ $monthlyTotals['expense_count'] }} mov.</p></article>
+                <article><span>Q {{ number_format($monthlyTotals['balance'], 2) }}</span><p>Saldo neto mensual</p></article>
+                <article><span>{{ $monthlyTotals['voided_count'] }}</span><p>Movimientos anulados</p></article>
+            </div>
+        </section>
+
         <section class="summary-grid">
             <article><span>Q {{ number_format($totals['income'], 2) }}</span><p>Ingresos validos</p></article>
             <article><span>Q {{ number_format($totals['expense'], 2) }}</span><p>Egresos validos</p></article>
@@ -23,6 +48,7 @@
         </section>
         <section class="panel">
             <form class="filters" method="GET" action="{{ route('cash.index') }}">
+                <input type="hidden" name="month" value="{{ $filters['month'] }}">
                 <div class="field"><label>Fecha</label><input name="date" type="date" value="{{ $filters['date'] }}"></div>
                 <div class="field"><label>Tipo</label><select name="type"><option value="">Todos</option><option value="income" @selected($filters['type']==='income')>Ingreso</option><option value="expense" @selected($filters['type']==='expense')>Egreso</option></select></div>
                 <div class="filter-actions"><button class="button primary" type="submit">Filtrar</button><a class="button" href="{{ route('cash.index') }}">Hoy</a></div>

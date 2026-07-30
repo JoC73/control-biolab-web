@@ -75,6 +75,35 @@ class BiolabCriticalFlowTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_cash_monthly_summary_excludes_voided_and_other_months(): void
+    {
+        $this->actingAsBiolab('caja');
+
+        $cash = app(CashStore::class);
+        $cash->create(['type' => 'income', 'date' => '2026-07-02', 'amount' => 100, 'method' => 'efectivo', 'description' => 'Ingreso julio']);
+        $cash->create(['type' => 'expense', 'date' => '2026-07-03', 'amount' => 25, 'method' => 'efectivo', 'description' => 'Egreso julio']);
+        $voided = $cash->create(['type' => 'income', 'date' => '2026-07-04', 'amount' => 50, 'method' => 'efectivo', 'description' => 'Ingreso anulado']);
+        $cash->void($voided['id'], 'Prueba QA');
+        $cash->create(['type' => 'income', 'date' => '2026-08-01', 'amount' => 500, 'method' => 'efectivo', 'description' => 'Ingreso agosto']);
+
+        $summary = $cash->monthlyTotals('2026-07');
+
+        $this->assertEqualsWithDelta(100.0, $summary['income'], 0.001);
+        $this->assertEqualsWithDelta(25.0, $summary['expense'], 0.001);
+        $this->assertEqualsWithDelta(75.0, $summary['balance'], 0.001);
+        $this->assertSame(1, $summary['income_count']);
+        $this->assertSame(1, $summary['expense_count']);
+        $this->assertSame(1, $summary['voided_count']);
+
+        $this->actingAsBiolab('caja')
+            ->get('/caja?month=2026-07')
+            ->assertOk()
+            ->assertSee('Resumen mensual')
+            ->assertSee('Q 100.00')
+            ->assertSee('Q 25.00')
+            ->assertSee('Q 75.00');
+    }
+
     public function test_initial_payment_cannot_exceed_net_total(): void
     {
         $this->actingAsBiolab('recepcion')

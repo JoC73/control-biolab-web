@@ -1419,6 +1419,32 @@ button:disabled,
     gap: 14px;
 }
 
+.monthly-cash-panel {
+    display: grid;
+    gap: 14px;
+    margin-bottom: 20px;
+}
+
+.monthly-cash-panel .section-heading {
+    margin-bottom: 0;
+}
+
+.monthly-summary-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    margin-bottom: 0;
+}
+
+.month-filter {
+    display: grid;
+    grid-template-columns: auto 170px auto;
+    align-items: center;
+    gap: 8px;
+}
+
+.month-filter label {
+    margin-left: 0;
+}
+
 .user-permission-list {
     display: grid;
     gap: 12px;
@@ -1611,7 +1637,9 @@ button:disabled,
     .two-column,
     .catalog-board,
     .exam-builder-head,
-    .exam-picker-toolbar {
+    .exam-picker-toolbar,
+    .month-filter,
+    .monthly-summary-grid {
         grid-template-columns: 1fr;
     }
 

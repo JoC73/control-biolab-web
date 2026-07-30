@@ -16,11 +16,13 @@ class CashController extends Controller
     public function index(Request $request)
     {
         $date = $request->input('date', now()->toDateString());
+        $month = $request->input('month', now()->format('Y-m'));
 
         return view('cash.index', [
             'movements' => $this->cash->search($request->only('date', 'type')),
             'totals' => $this->cash->totals($date),
-            'filters' => ['date' => $date, 'type' => $request->input('type')],
+            'monthlyTotals' => $this->cash->monthlyTotals($month),
+            'filters' => ['date' => $date, 'month' => $month, 'type' => $request->input('type')],
         ]);
     }
 
