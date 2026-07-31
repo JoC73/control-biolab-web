@@ -70,8 +70,6 @@
 
                 <div class="catalog-table" id="price-table">
                     <div class="catalog-table-head">Examen</div>
-                    <div class="catalog-table-head">Tipo</div>
-                    <div class="catalog-table-head">Pruebas</div>
                     <div class="catalog-table-head">Precio</div>
                     <div class="catalog-table-head">Accion</div>
 
@@ -82,8 +80,6 @@
                                 <strong>{{ $category['name'] }}</strong>
                                 <span>{{ $category['title'] }}</span>
                             </div>
-                            <div><span class="soft-badge">{{ ! empty($category['custom']) ? 'Personalizado' : 'Base' }}</span></div>
-                            <div>{{ count($category['tests']) ?: 'Libre' }}</div>
                             <div>
                                 <input type="hidden" name="slug" value="{{ $category['slug'] }}">
                                 <input class="price-input" name="price" type="number" min="0" step="0.01" value="{{ $prices[$category['slug']] ?? 0 }}" aria-label="Precio base de {{ $category['name'] }}" @readonly(! $auth->hasPermission('catalogs.prices') && ! $auth->hasPermission('catalogs.manage'))>

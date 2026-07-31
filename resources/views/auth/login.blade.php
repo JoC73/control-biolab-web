@@ -27,7 +27,11 @@
             </div>
 
             @if ($errors->any())
-                <div class="status-message error-message login-error">{{ $errors->first() }}</div>
+                <div class="status-message error-message login-error guidance-message">
+                    <strong>No pudimos ingresar</strong>
+                    <span>{{ $errors->first() }}</span>
+                    <span>Verifica el correo y usa el boton Ver si necesitas revisar la contrasena.</span>
+                </div>
             @endif
 
             <form method="POST" action="{{ route('login.store') }}" class="login-form">

@@ -30,21 +30,47 @@
         <form id="order-form" class="workbench" method="POST" action="{{ route('orders.store') }}">
             @csrf
             @if ($errors->any())
-                <div class="status-message wide error-message">{{ $errors->first() }}</div>
+                <div class="status-message wide error-message guidance-message">
+                    <strong>Revisa estos datos antes de guardar</strong>
+                    <span>No se perdio tu informacion. Corrige lo indicado y vuelve a guardar el cobro.</span>
+                    <ul class="form-error-list">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
             @endif
+
+            <section class="help-strip" aria-label="Guia rapida para registrar cobros">
+                <article>
+                    <strong>1. Paciente</strong>
+                    <span>Ingresa nombre, fecha y referencia medica.</span>
+                </article>
+                <article>
+                    <strong>2. Examenes</strong>
+                    <span>Selecciona uno o varios examenes solicitados.</span>
+                </article>
+                <article>
+                    <strong>3. Pago</strong>
+                    <span>El sistema calcula total y saldo pendiente.</span>
+                </article>
+            </section>
 
             <section class="panel form-panel">
                 <div class="field span-2">
                     <label for="patient_name">Paciente</label>
                     <input id="patient_name" name="patient_name" value="{{ old('patient_name') }}" required autofocus>
+                    <p class="field-hint">Escribe el nombre completo como debe salir en el resultado.</p>
                 </div>
                 <div class="field">
                     <label for="age">Edad</label>
                     <input id="age" name="age" value="{{ old('age') }}">
+                    <p class="field-hint">Puede quedar vacia si no la tienes.</p>
                 </div>
                 <div class="field">
                     <label for="phone">WhatsApp</label>
                     <input id="phone" name="phone" value="{{ old('phone') }}" placeholder="502...">
+                    <p class="field-hint">Usalo para enviar el PDF cuando este listo.</p>
                 </div>
                 <div class="field">
                     <label for="date">Fecha</label>
@@ -64,6 +90,7 @@
                             <button class="button compact-button" type="button" data-referrer-change @disabled(! $initialReferrer)>Cambiar</button>
                         </div>
                     </div>
+                    <p class="field-hint">Toca una referencia de la lista. Usa Buscar solo cuando necesites filtrar.</p>
                     <input class="referrer-search-input" type="search" placeholder="Buscar por nombre" autocomplete="off" data-referrer-search hidden>
                     <div class="referrer-picker" data-referrer-picker aria-label="Referencias medicas disponibles">
                         @foreach ($referrers as $referrer)
@@ -102,7 +129,6 @@
                             <input type="hidden" name="exam_prices[{{ $category['slug'] }}]" value="{{ number_format($examPrice, 2, '.', '') }}">
                             <span class="exam-option-main">
                                 <strong>{{ $category['name'] }}</strong>
-                                <small>{{ count($category['tests']) ?: 'Pendiente' }} pruebas base</small>
                             </span>
                             <span class="exam-price">Q {{ number_format($examPrice, 2) }}</span>
                         </label>
@@ -118,10 +144,12 @@
                 <div class="field">
                     <label for="discount">Descuento</label>
                     <input id="discount" name="discount" type="number" step="0.01" min="0" value="{{ $initialDiscountValue !== null ? $initialDiscountValue : '' }}" placeholder="0.00" data-discount data-money-input>
+                    <p class="field-hint">Si no hay descuento, dejalo vacio o en cero.</p>
                 </div>
                 <div class="field">
                     <label for="paid_amount">Pago inicial</label>
                     <input id="paid_amount" name="paid_amount" type="number" step="0.01" min="0" value="{{ $initialPaidValue !== null ? $initialPaidValue : '' }}" placeholder="0.00" data-paid data-money-input>
+                    <p class="field-hint">No puede ser mayor al total neto.</p>
                 </div>
                 <div class="field">
                     <label for="payment_method">Forma de pago</label>
@@ -141,10 +169,12 @@
                 <div class="field">
                     <label>Total neto</label>
                     <input value="{{ number_format($initialTotal, 2, '.', '') }}" readonly data-total>
+                    <p class="field-hint">Subtotal menos descuento.</p>
                 </div>
                 <div class="field">
                     <label>Saldo pendiente</label>
                     <input value="{{ number_format($initialBalance, 2, '.', '') }}" readonly data-balance>
+                    <p class="field-hint">Lo que falta por cobrar despues del pago inicial.</p>
                 </div>
             </section>
 

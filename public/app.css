@@ -733,7 +733,7 @@ button,
 
 .catalog-table {
     display: grid;
-    grid-template-columns: minmax(170px, 1.4fr) 90px 70px 108px 112px;
+    grid-template-columns: minmax(190px, 1fr) minmax(118px, 150px) minmax(150px, auto);
     width: 100%;
     border: 1px solid var(--line);
     border-radius: 8px;
@@ -877,19 +877,15 @@ button,
 }
 
 .exam-option-main {
-    display: grid;
-    gap: 4px;
+    display: flex;
+    align-items: center;
     min-width: 0;
+    min-height: 24px;
 }
 
 .exam-option-main strong {
     overflow-wrap: anywhere;
     line-height: 1.18;
-}
-
-.exam-option-main small {
-    color: var(--muted);
-    font-size: .78rem;
 }
 
 .exam-price {
@@ -1273,10 +1269,73 @@ small {
     width: 100%;
 }
 
+.guidance-message {
+    display: grid;
+    gap: 6px;
+    line-height: 1.35;
+}
+
+.guidance-message strong {
+    display: block;
+    font-size: .98rem;
+}
+
+.guidance-message span {
+    color: inherit;
+    font-weight: 700;
+}
+
+.form-error-list {
+    display: grid;
+    gap: 4px;
+    margin: 4px 0 0;
+    padding-left: 18px;
+    font-weight: 800;
+}
+
 .error-message {
     border-color: #f0b7ae;
     background: #fff4f2;
     color: #9f1d13;
+}
+
+.help-strip {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.help-strip article {
+    min-height: 66px;
+    padding: 12px 14px;
+    border: 1px solid #bfd9e5;
+    border-radius: 8px;
+    background: linear-gradient(180deg, #ffffff, #f7fbfb);
+}
+
+.help-strip strong,
+.help-strip span {
+    display: block;
+}
+
+.help-strip strong {
+    color: #0b2a42;
+    font-size: .92rem;
+    font-weight: 900;
+}
+
+.help-strip span {
+    margin-top: 4px;
+    color: var(--muted);
+    font-size: .86rem;
+    line-height: 1.35;
+}
+
+.field-hint {
+    margin: 5px 0 0;
+    color: #5e7184;
+    font-size: .78rem;
+    line-height: 1.35;
 }
 
 .login-body {
@@ -1743,6 +1802,7 @@ button:disabled,
     .lab-board,
     .user-permission-card,
     .two-column,
+    .help-strip,
     .catalog-board,
     .exam-builder-head,
     .exam-picker-toolbar,
@@ -1761,6 +1821,7 @@ button:disabled,
 
     .exam-option-card {
         grid-template-columns: 26px minmax(0, 1fr);
+        min-height: 58px;
     }
 
     .exam-price {

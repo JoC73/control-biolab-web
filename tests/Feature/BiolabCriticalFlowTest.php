@@ -58,6 +58,8 @@ class BiolabCriticalFlowTest extends TestCase
             ->assertOk()
             ->assertSee('Precio base por examen')
             ->assertSee('Guardar')
+            ->assertDontSee('<div class="catalog-table-head">Pruebas</div>', false)
+            ->assertDontSee('>Base</span>', false)
             ->assertDontSee('Crear examen');
 
         $this->actingAsBiolab('caja')
@@ -246,12 +248,15 @@ class BiolabCriticalFlowTest extends TestCase
         $this->actingAsBiolab('recepcion')
             ->get('/ordenes/nueva')
             ->assertOk()
+            ->assertSee('Guia rapida para registrar cobros')
+            ->assertSee('El sistema calcula total y saldo pendiente.')
             ->assertSee('data-referrer-value', false)
             ->assertSee('data-referrer-selected', false)
             ->assertSee('data-referrer-search-toggle', false)
             ->assertSee('data-referrer-search', false)
             ->assertSee('data-referrer-picker', false)
             ->assertSee('data-referrer-option', false)
+            ->assertDontSee('pruebas base')
             ->assertDontSee('<datalist', false);
     }
 
@@ -261,6 +266,7 @@ class BiolabCriticalFlowTest extends TestCase
             ->assertOk()
             ->assertSee('data-password-input', false)
             ->assertSee('data-password-toggle', false)
+            ->assertSee('aria-controls="password"', false)
             ->assertSee('aria-pressed="false"', false);
     }
 
