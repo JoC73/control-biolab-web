@@ -466,6 +466,59 @@ button,
     font-weight: 800;
 }
 
+.referrer-picker {
+    display: grid;
+    gap: 6px;
+    max-height: 164px;
+    overflow-y: auto;
+    padding: 8px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #f9fcfd;
+    scrollbar-color: #9ab7c5 #eef5f7;
+    scrollbar-width: thin;
+}
+
+.referrer-picker button {
+    width: 100%;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 10px;
+    min-height: 40px;
+    padding: 8px 10px;
+    border: 1px solid transparent;
+    border-radius: 7px;
+    background: #fff;
+    color: var(--ink);
+    text-align: left;
+    cursor: pointer;
+}
+
+.referrer-picker button:hover,
+.referrer-picker button:focus-visible {
+    outline: 0;
+    border-color: #94c8dc;
+    background: #eef8fc;
+}
+
+.referrer-picker strong {
+    overflow-wrap: anywhere;
+    font-size: .88rem;
+}
+
+.referrer-picker span {
+    display: inline-flex;
+    align-items: center;
+    min-height: 24px;
+    padding: 0 8px;
+    border-radius: 999px;
+    background: var(--soft);
+    color: #165d4b;
+    font-size: .72rem;
+    font-weight: 900;
+}
+
 .muted-row {
     opacity: .68;
 }
@@ -1679,6 +1732,20 @@ button:disabled,
     .reference-list {
         max-height: 260px;
         padding-right: 4px;
+    }
+
+    .referrer-picker {
+        max-height: 190px;
+    }
+
+    .referrer-picker button {
+        grid-template-columns: 1fr;
+        gap: 4px;
+        min-height: 48px;
+    }
+
+    .referrer-picker span {
+        width: fit-content;
     }
 
     .reference-record {

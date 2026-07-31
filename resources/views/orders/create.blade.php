@@ -52,12 +52,15 @@
                 <input type="hidden" name="category_slug" value="{{ $selectedCategory }}" data-primary-exam>
                 <div class="field span-2">
                     <label for="referrer">Referencia medica</label>
-                    <input id="referrer" name="referrer" list="referrers" value="{{ old('referrer') }}" placeholder="Medico o institucion">
-                    <datalist id="referrers">
+                    <input id="referrer" name="referrer" value="{{ old('referrer') }}" placeholder="Buscar medico o institucion" autocomplete="off" data-referrer-input>
+                    <div class="referrer-picker" data-referrer-picker aria-label="Referencias medicas disponibles">
                         @foreach ($referrers as $referrer)
-                            <option value="{{ $referrer }}"></option>
+                            <button type="button" data-referrer-option="{{ $referrer }}">
+                                <strong>{{ $referrer }}</strong>
+                                <span>{{ str_contains($referrer, 'CENTRO') || str_contains($referrer, 'FARMACIA') ? 'Institucion' : 'Medico' }}</span>
+                            </button>
                         @endforeach
-                    </datalist>
+                    </div>
                 </div>
             </section>
 
@@ -148,6 +151,8 @@
             const examSubtotal = document.querySelector('[data-exam-subtotal]');
             const selectedExams = document.querySelector('[data-selected-exams]');
             const examSearch = document.querySelector('[data-exam-search]');
+            const referrerInput = document.querySelector('[data-referrer-input]');
+            const referrerOptions = Array.from(document.querySelectorAll('[data-referrer-option]'));
             const price = document.querySelector('[data-subtotal]');
             const discount = document.querySelector('[data-discount]');
             const paid = document.querySelector('[data-paid]');
@@ -200,6 +205,23 @@
             };
             exams.forEach((exam) => exam.addEventListener('change', scheduleUpdate));
             examSearch?.addEventListener('input', filterExams);
+            const filterReferrers = () => {
+                const term = String(referrerInput?.value || '').trim().toLowerCase();
+                referrerOptions.forEach((option) => {
+                    const label = String(option.dataset.referrerOption || '').toLowerCase();
+                    option.hidden = term !== '' && ! label.includes(term);
+                });
+            };
+            referrerOptions.forEach((option) => {
+                option.addEventListener('click', () => {
+                    if (! referrerInput) return;
+                    referrerInput.value = option.dataset.referrerOption || '';
+                    filterReferrers();
+                    referrerInput.focus();
+                });
+            });
+            referrerInput?.addEventListener('input', filterReferrers);
+            referrerInput?.addEventListener('focus', filterReferrers);
             [discount, paid].forEach((field) => {
                 field.addEventListener('focus', () => field.select());
                 field.addEventListener('input', scheduleUpdate);
@@ -221,6 +243,7 @@
             window.addEventListener('pageshow', scheduleUpdate);
             document.addEventListener('visibilitychange', scheduleUpdate);
             scheduleUpdate();
+            filterReferrers();
         })();
     </script>
 @endsection

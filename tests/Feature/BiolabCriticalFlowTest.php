@@ -241,6 +241,17 @@ class BiolabCriticalFlowTest extends TestCase
             ->assertDontSee('data-price', false);
     }
 
+    public function test_create_order_view_uses_touch_friendly_referrer_picker(): void
+    {
+        $this->actingAsBiolab('recepcion')
+            ->get('/ordenes/nueva')
+            ->assertOk()
+            ->assertSee('data-referrer-input', false)
+            ->assertSee('data-referrer-picker', false)
+            ->assertSee('data-referrer-option', false)
+            ->assertDontSee('<datalist', false);
+    }
+
     public function test_multi_exam_order_rejects_duplicates_and_manipulated_prices(): void
     {
         $this->seedExamPrices();
