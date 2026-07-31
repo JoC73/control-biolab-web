@@ -51,6 +51,16 @@ class BiolabCriticalFlowTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_mobile_navigation_shows_logout_action(): void
+    {
+        $this->actingAsBiolab('recepcion')
+            ->get('/')
+            ->assertOk()
+            ->assertSee('class="mobile-logout-form"', false)
+            ->assertSee('action="http://localhost/logout"', false)
+            ->assertSee('Salir');
+    }
+
     public function test_cashier_profile_can_update_prices_but_not_manage_templates_or_references(): void
     {
         $this->actingAsBiolab('caja')

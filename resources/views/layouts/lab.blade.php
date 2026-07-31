@@ -86,6 +86,12 @@
                     @if ($auth->hasPermission('catalogs.view'))
                         <a href="{{ route('catalog.index') }}">Catalogos</a>
                     @endif
+                    @if (session('biolab_user'))
+                        <form class="mobile-logout-form" method="POST" action="{{ route('logout') }}">
+                            @csrf
+                            <button type="submit">Salir</button>
+                        </form>
+                    @endif
                 </nav>
             </header>
 

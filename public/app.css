@@ -89,7 +89,8 @@ a {
 }
 
 .side-nav a,
-.mobile-nav a {
+.mobile-nav a,
+.mobile-logout-form button {
     display: flex;
     align-items: center;
     min-height: 40px;
@@ -101,9 +102,23 @@ a {
 
 .side-nav a:hover,
 .side-nav a.active,
-.mobile-nav a:hover {
+.mobile-nav a:hover,
+.mobile-logout-form button:hover {
     background: var(--soft);
     color: #0d496f;
+}
+
+.mobile-logout-form {
+    margin: 0;
+}
+
+.mobile-logout-form button {
+    width: 100%;
+    justify-content: flex-start;
+    border: 0;
+    background: transparent;
+    font: inherit;
+    cursor: pointer;
 }
 
 .side-nav a.active {
@@ -1765,7 +1780,8 @@ button:disabled,
         overflow-x: auto;
     }
 
-    .mobile-nav a {
+    .mobile-nav a,
+    .mobile-logout-form button {
         justify-content: center;
         min-height: 34px;
         padding: 0 8px;
