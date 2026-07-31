@@ -38,11 +38,30 @@
                 </div>
                 <div class="field">
                     <label for="password">Contrasena</label>
-                    <input id="password" name="password" type="password" autocomplete="current-password" required>
+                    <div class="password-field">
+                        <input id="password" name="password" type="password" autocomplete="current-password" required data-password-input>
+                        <button class="button compact-button" type="button" data-password-toggle aria-controls="password" aria-pressed="false">Ver</button>
+                    </div>
                 </div>
                 <button class="button primary login-submit" type="submit">Ingresar</button>
             </form>
         </section>
     </main>
+
+    <script>
+        (() => {
+            const password = document.querySelector('[data-password-input]');
+            const toggle = document.querySelector('[data-password-toggle]');
+
+            if (! password || ! toggle) return;
+
+            toggle.addEventListener('click', () => {
+                const visible = password.type === 'text';
+                password.type = visible ? 'password' : 'text';
+                toggle.textContent = visible ? 'Ver' : 'Ocultar';
+                toggle.setAttribute('aria-pressed', String(! visible));
+            });
+        })();
+    </script>
 </body>
 </html>

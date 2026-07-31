@@ -466,10 +466,54 @@ button,
     font-weight: 800;
 }
 
+.referrer-selected {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 12px;
+    min-height: 50px;
+    padding: 10px 12px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #fff;
+}
+
+.referrer-selected.has-value {
+    border-color: #9cc8d8;
+    background: #f8fcfd;
+    box-shadow: inset 3px 0 0 var(--blue);
+}
+
+.referrer-selected strong,
+.referrer-selected span {
+    display: block;
+}
+
+.referrer-selected strong {
+    overflow-wrap: anywhere;
+    line-height: 1.2;
+}
+
+.referrer-selected span {
+    margin-top: 3px;
+    color: var(--muted);
+    font-size: .82rem;
+}
+
+.referrer-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.referrer-search-input {
+    margin-top: 8px;
+}
+
 .referrer-picker {
     display: grid;
     gap: 6px;
     max-height: 164px;
+    margin-top: 8px;
     overflow-y: auto;
     padding: 8px;
     border: 1px solid var(--line);
@@ -1325,6 +1369,17 @@ small {
     font-size: .98rem;
 }
 
+.password-field {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
+    align-items: center;
+}
+
+.password-field input {
+    min-width: 0;
+}
+
 .login-submit {
     width: 100%;
     min-height: 46px;
@@ -1738,6 +1793,16 @@ button:disabled,
         max-height: 190px;
     }
 
+    .referrer-selected {
+        grid-template-columns: 1fr;
+        align-items: stretch;
+    }
+
+    .referrer-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+    }
+
     .referrer-picker button {
         grid-template-columns: 1fr;
         gap: 4px;
@@ -1881,6 +1946,10 @@ button:disabled,
     .login-card {
         min-height: auto;
         padding: 24px 22px;
+    }
+
+    .password-field {
+        grid-template-columns: 1fr;
     }
 
     .login-heading h2 {

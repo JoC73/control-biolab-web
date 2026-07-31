@@ -11,6 +11,7 @@
         $initialPaid = (float) ($initialPaidValue ?? 0);
         $initialTotal = max(0, round($initialPrice - $initialDiscount, 2));
         $initialBalance = max(0, round($initialTotal - $initialPaid, 2));
+        $initialReferrer = old('referrer');
     @endphp
 
     <main class="app-shell">
@@ -51,8 +52,19 @@
                 </div>
                 <input type="hidden" name="category_slug" value="{{ $selectedCategory }}" data-primary-exam>
                 <div class="field span-2">
-                    <label for="referrer">Referencia medica</label>
-                    <input id="referrer" name="referrer" value="{{ old('referrer') }}" placeholder="Buscar medico o institucion" autocomplete="off" data-referrer-input>
+                    <label>Referencia medica</label>
+                    <input type="hidden" name="referrer" value="{{ $initialReferrer }}" data-referrer-value>
+                    <div class="referrer-selected {{ $initialReferrer ? 'has-value' : '' }}" data-referrer-selected>
+                        <div>
+                            <strong data-referrer-selected-name>{{ $initialReferrer ?: 'Sin referencia seleccionada' }}</strong>
+                            <span data-referrer-selected-type>{{ $initialReferrer ? (str_contains($initialReferrer, 'CENTRO') || str_contains($initialReferrer, 'FARMACIA') ? 'Institucion' : 'Medico') : 'Selecciona una opcion' }}</span>
+                        </div>
+                        <div class="referrer-actions">
+                            <button class="button compact-button" type="button" data-referrer-search-toggle>Buscar</button>
+                            <button class="button compact-button" type="button" data-referrer-change @disabled(! $initialReferrer)>Cambiar</button>
+                        </div>
+                    </div>
+                    <input class="referrer-search-input" type="search" placeholder="Buscar por nombre" autocomplete="off" data-referrer-search hidden>
                     <div class="referrer-picker" data-referrer-picker aria-label="Referencias medicas disponibles">
                         @foreach ($referrers as $referrer)
                             <button type="button" data-referrer-option="{{ $referrer }}">
@@ -151,7 +163,13 @@
             const examSubtotal = document.querySelector('[data-exam-subtotal]');
             const selectedExams = document.querySelector('[data-selected-exams]');
             const examSearch = document.querySelector('[data-exam-search]');
-            const referrerInput = document.querySelector('[data-referrer-input]');
+            const referrerValue = document.querySelector('[data-referrer-value]');
+            const referrerSearch = document.querySelector('[data-referrer-search]');
+            const referrerSelected = document.querySelector('[data-referrer-selected]');
+            const referrerSelectedName = document.querySelector('[data-referrer-selected-name]');
+            const referrerSelectedType = document.querySelector('[data-referrer-selected-type]');
+            const referrerSearchToggle = document.querySelector('[data-referrer-search-toggle]');
+            const referrerChange = document.querySelector('[data-referrer-change]');
             const referrerOptions = Array.from(document.querySelectorAll('[data-referrer-option]'));
             const price = document.querySelector('[data-subtotal]');
             const discount = document.querySelector('[data-discount]');
@@ -205,23 +223,51 @@
             };
             exams.forEach((exam) => exam.addEventListener('change', scheduleUpdate));
             examSearch?.addEventListener('input', filterExams);
+            const referrerType = (value) => {
+                const normalized = String(value || '').toUpperCase();
+                return normalized.includes('CENTRO') || normalized.includes('FARMACIA') ? 'Institucion' : 'Medico';
+            };
+            const renderReferrer = () => {
+                const value = String(referrerValue?.value || '').trim();
+                if (referrerSelectedName) referrerSelectedName.textContent = value || 'Sin referencia seleccionada';
+                if (referrerSelectedType) referrerSelectedType.textContent = value ? referrerType(value) : 'Selecciona una opcion';
+                referrerSelected?.classList.toggle('has-value', value !== '');
+                if (referrerChange) referrerChange.disabled = value === '';
+            };
             const filterReferrers = () => {
-                const term = String(referrerInput?.value || '').trim().toLowerCase();
+                const term = String(referrerSearch?.value || '').trim().toLowerCase();
                 referrerOptions.forEach((option) => {
                     const label = String(option.dataset.referrerOption || '').toLowerCase();
                     option.hidden = term !== '' && ! label.includes(term);
                 });
             };
+            const showReferrerSearch = (focus = false) => {
+                if (! referrerSearch) return;
+                referrerSearch.hidden = false;
+                filterReferrers();
+                if (focus) referrerSearch.focus();
+            };
             referrerOptions.forEach((option) => {
                 option.addEventListener('click', () => {
-                    if (! referrerInput) return;
-                    referrerInput.value = option.dataset.referrerOption || '';
+                    if (! referrerValue) return;
+                    referrerValue.value = option.dataset.referrerOption || '';
+                    if (referrerSearch) {
+                        referrerSearch.value = '';
+                        referrerSearch.hidden = true;
+                        referrerSearch.blur();
+                    }
                     filterReferrers();
-                    referrerInput.focus();
+                    renderReferrer();
                 });
             });
-            referrerInput?.addEventListener('input', filterReferrers);
-            referrerInput?.addEventListener('focus', filterReferrers);
+            referrerSearchToggle?.addEventListener('click', () => showReferrerSearch(true));
+            referrerChange?.addEventListener('click', () => {
+                if (! referrerValue) return;
+                referrerValue.value = '';
+                renderReferrer();
+                showReferrerSearch(false);
+            });
+            referrerSearch?.addEventListener('input', filterReferrers);
             [discount, paid].forEach((field) => {
                 field.addEventListener('focus', () => field.select());
                 field.addEventListener('input', scheduleUpdate);
@@ -244,6 +290,7 @@
             document.addEventListener('visibilitychange', scheduleUpdate);
             scheduleUpdate();
             filterReferrers();
+            renderReferrer();
         })();
     </script>
 @endsection

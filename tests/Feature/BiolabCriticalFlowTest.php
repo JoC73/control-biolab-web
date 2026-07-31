@@ -246,10 +246,22 @@ class BiolabCriticalFlowTest extends TestCase
         $this->actingAsBiolab('recepcion')
             ->get('/ordenes/nueva')
             ->assertOk()
-            ->assertSee('data-referrer-input', false)
+            ->assertSee('data-referrer-value', false)
+            ->assertSee('data-referrer-selected', false)
+            ->assertSee('data-referrer-search-toggle', false)
+            ->assertSee('data-referrer-search', false)
             ->assertSee('data-referrer-picker', false)
             ->assertSee('data-referrer-option', false)
             ->assertDontSee('<datalist', false);
+    }
+
+    public function test_login_has_password_visibility_toggle(): void
+    {
+        $this->get('/login')
+            ->assertOk()
+            ->assertSee('data-password-input', false)
+            ->assertSee('data-password-toggle', false)
+            ->assertSee('aria-pressed="false"', false);
     }
 
     public function test_multi_exam_order_rejects_duplicates_and_manipulated_prices(): void
