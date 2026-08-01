@@ -6,6 +6,7 @@ use App\Services\CashStore;
 use App\Services\CatalogStore;
 use App\Services\OrderStore;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\RateLimiter;
 use Tests\TestCase;
 
 class BiolabCriticalFlowTest extends TestCase
@@ -19,6 +20,8 @@ class BiolabCriticalFlowTest extends TestCase
         File::deleteDirectory(storage_path('app/lab-results'));
         File::deleteDirectory(storage_path('app/audit'));
         File::deleteDirectory(storage_path('app/catalog'));
+        RateLimiter::clear('admin@biolab.local|127.0.0.1');
+        RateLimiter::clear('intruso@biolab.local|127.0.0.1');
     }
 
     public function test_backend_permission_blocks_unauthorized_order_creation(): void
@@ -278,6 +281,30 @@ class BiolabCriticalFlowTest extends TestCase
             ->assertSee('data-password-toggle', false)
             ->assertSee('aria-controls="password"', false)
             ->assertSee('aria-pressed="false"', false);
+    }
+
+    public function test_login_redirects_authenticated_users_to_home(): void
+    {
+        $this->actingAsBiolab('admin')
+            ->get('/login')
+            ->assertRedirect('/');
+    }
+
+    public function test_login_is_rate_limited_after_failed_attempts(): void
+    {
+        for ($attempt = 0; $attempt < 5; $attempt++) {
+            $this->post('/login', [
+                'email' => 'intruso@biolab.local',
+                'password' => 'clave-incorrecta',
+            ])->assertSessionHasErrors('email');
+        }
+
+        $this->post('/login', [
+            'email' => 'intruso@biolab.local',
+            'password' => 'clave-incorrecta',
+        ])
+            ->assertSessionHasErrors(['email' => 'Demasiados intentos. Espera 60 segundos antes de intentar nuevamente.'])
+            ->assertSessionHasInput('email', 'intruso@biolab.local');
     }
 
     public function test_multi_exam_order_rejects_duplicates_and_manipulated_prices(): void
