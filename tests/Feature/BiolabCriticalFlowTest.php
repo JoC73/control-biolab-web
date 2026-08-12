@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Services\CashStore;
 use App\Services\CatalogStore;
 use App\Services\OrderStore;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\RateLimiter;
 use Tests\TestCase;
@@ -284,6 +285,20 @@ class BiolabCriticalFlowTest extends TestCase
             ->assertSee('data-subtotal', false)
             ->assertSee('data-exam-price="75"', false)
             ->assertDontSee('data-price', false);
+    }
+
+    public function test_create_order_view_uses_guatemala_today_for_default_date(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-08-11 22:30:00', 'America/Guatemala'));
+
+        try {
+            $this->actingAsBiolab('recepcion')
+                ->get('/ordenes/nueva')
+                ->assertOk()
+                ->assertSee('value="2026-08-11"', false);
+        } finally {
+            Carbon::setTestNow();
+        }
     }
 
     public function test_create_order_view_uses_touch_friendly_referrer_picker(): void
