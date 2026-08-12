@@ -221,6 +221,36 @@ class BiolabCriticalFlowTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_general_pdf_matches_individual_pdf_when_order_is_paid_and_ready(): void
+    {
+        $this->createOrderAsReception(['price' => 75, 'paid_amount' => 75]);
+        $order = app(OrderStore::class)->all()->first();
+
+        $this->actingAsBiolab('laboratorio')
+            ->post("/ordenes/{$order['id']}/resultados", [
+                'exam_index' => 0,
+                'tests' => [
+                    ['name' => 'Hemoglobina', 'unit' => 'g/dL', 'reference' => '12.0-17.0'],
+                ],
+                'results' => [''],
+                'status' => 'ready',
+            ])
+            ->assertRedirect();
+
+        $ready = app(OrderStore::class)->find($order['id']);
+        $this->assertSame('ready', $ready['status']);
+
+        $this->actingAsBiolab('recepcion')
+            ->get("/ordenes/{$order['id']}/pdf/0")
+            ->assertOk()
+            ->assertHeader('Content-Type', 'application/pdf');
+
+        $this->actingAsBiolab('recepcion')
+            ->get("/ordenes/{$order['id']}/pdf")
+            ->assertOk()
+            ->assertHeader('Content-Type', 'application/pdf');
+    }
+
     public function test_multi_exam_order_uses_backend_prices_and_one_cash_movement(): void
     {
         $this->seedExamPrices();

@@ -411,8 +411,7 @@ class OrderController extends Controller
     {
         return in_array($order['status'] ?? null, ['ready', 'delivered'], true)
             && ($order['payment_status'] ?? null) === 'paid'
-            && $this->orders->allExamItemsReady($order)
-            && $this->orderHasAnyResult($order);
+            && $this->orders->allExamItemsReady($order);
     }
 
     private function ensurePrintableOrder(array $order): void
