@@ -4,4 +4,5 @@
     'result' => ['patient_name' => $order['patient_name'], 'age' => $order['age'], 'referred_by' => $order['referrer'], 'date' => $order['date']],
     'tests' => count($examItems) === 1 ? ($examItems[0]['tests'] ?? []) : [],
     'examItems' => $examItems,
+    'groupedPdf' => count($examItems) > 1,
 ])

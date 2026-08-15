@@ -510,11 +510,12 @@ class BiolabCriticalFlowTest extends TestCase
             ->assertOk()
             ->assertHeader('Content-Type', 'application/pdf');
 
-        $this->actingAsBiolab('recepcion')
+        $groupedPdf = $this->actingAsBiolab('recepcion')
             ->get("/ordenes/{$order['id']}/pdf")
             ->assertOk()
             ->assertHeader('Content-Type', 'application/pdf');
 
+        $this->assertSame(2, preg_match_all('/\/Type\s*\/Page\b/', $groupedPdf->baseResponse->getContent()));
         $this->assertSame('delivered', app(OrderStore::class)->find($order['id'])['status']);
     }
 

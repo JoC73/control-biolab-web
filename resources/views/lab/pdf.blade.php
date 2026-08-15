@@ -133,6 +133,10 @@
             margin-bottom: 8px;
         }
 
+        .page-break-after {
+            page-break-after: always;
+        }
+
         .report-footer {
             position: fixed;
             right: 28px;
@@ -195,97 +199,171 @@
     </style>
 </head>
 <body>
-    <header class="report-header">
-        <div class="report-brand">
-            @if (!empty($logoDataUri))
-                <img class="report-logo" src="{{ $logoDataUri }}" alt="BIOLAB">
-            @endif
-            LABORATORIO
-            <span>BIOLAB</span>
-            TEL: {{ $business['phone'] }}
-        </div>
-        <div class="report-business">
-            <h1>{{ $business['name'] }}</h1>
-            <p>{{ $business['address'] }}</p>
-            <p>TELEFONOS: {{ $business['phone'] }}</p>
-            <h3>{{ $business['director'] }}</h3>
-            <p>{{ $business['credential'] }}</p>
-        </div>
-        <div class="report-side-space"></div>
-    </header>
+    @php
+        $readyExamItems = collect($examItems ?? [])
+            ->filter(fn (array $examItem) => ($examItem['status'] ?? 'ready') === 'ready')
+            ->values();
+        $isGroupedPdf = ($groupedPdf ?? false) && $readyExamItems->count() > 1;
+    @endphp
 
-    <table class="patient-grid">
-        <tr>
-            <th>Nombre:</th>
-            <td>{{ $result['patient_name'] }}</td>
-            <th>Fecha:</th>
-            <td>{{ \Illuminate\Support\Carbon::parse($result['date'])->format('d/m/Y') }}</td>
-        </tr>
-        <tr>
-            <th>Edad:</th>
-            <td>{{ $result['age'] ?? '' }}</td>
-            <th>Refiere:</th>
-            <td>{{ $result['referred_by'] ?? '' }}</td>
-        </tr>
-    </table>
+    @if ($isGroupedPdf)
+        @foreach ($readyExamItems as $examItem)
+            <main class="{{ $loop->last ? '' : 'page-break-after' }}">
+                <header class="report-header">
+                    <div class="report-brand">
+                        @if (!empty($logoDataUri))
+                            <img class="report-logo" src="{{ $logoDataUri }}" alt="BIOLAB">
+                        @endif
+                        LABORATORIO
+                        <span>BIOLAB</span>
+                        TEL: {{ $business['phone'] }}
+                    </div>
+                    <div class="report-business">
+                        <h1>{{ $business['name'] }}</h1>
+                        <p>{{ $business['address'] }}</p>
+                        <p>TELEFONOS: {{ $business['phone'] }}</p>
+                        <h3>{{ $business['director'] }}</h3>
+                        <p>{{ $business['credential'] }}</p>
+                    </div>
+                    <div class="report-side-space"></div>
+                </header>
 
-    @if (!empty($examItems ?? []))
-        @foreach ($examItems as $examItem)
-            @continue(($examItem['status'] ?? 'ready') !== 'ready')
-            <section class="exam-section">
-                <h2>{{ $examItem['category_title'] }}</h2>
-                <table class="print-table">
-                    <thead>
-                        <tr>
-                            <th>Analisis</th>
-                            <th>Resultado</th>
-                            <th>Unidades</th>
-                            <th>V.N.</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse (($examItem['tests'] ?? []) as $index => $test)
-                            <tr>
-                                <td>{{ $test['name'] }}</td>
-                                <td>{{ $examItem['results'][$index] ?? '' }}</td>
-                                <td>{{ $test['unit'] }}</td>
-                                <td>{{ $test['reference'] }}</td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="4">Sin resultados registrados.</td>
-                            </tr>
-                        @endforelse
-                    </tbody>
+                <table class="patient-grid">
+                    <tr>
+                        <th>Nombre:</th>
+                        <td>{{ $result['patient_name'] }}</td>
+                        <th>Fecha:</th>
+                        <td>{{ \Illuminate\Support\Carbon::parse($result['date'])->format('d/m/Y') }}</td>
+                    </tr>
+                    <tr>
+                        <th>Edad:</th>
+                        <td>{{ $result['age'] ?? '' }}</td>
+                        <th>Refiere:</th>
+                        <td>{{ $result['referred_by'] ?? '' }}</td>
+                    </tr>
                 </table>
-            </section>
+
+                <section class="exam-section">
+                    <h2>{{ $examItem['category_title'] }}</h2>
+                    <table class="print-table">
+                        <thead>
+                            <tr>
+                                <th>Analisis</th>
+                                <th>Resultado</th>
+                                <th>Unidades</th>
+                                <th>V.N.</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse (($examItem['tests'] ?? []) as $index => $test)
+                                <tr>
+                                    <td>{{ $test['name'] }}</td>
+                                    <td>{{ $examItem['results'][$index] ?? '' }}</td>
+                                    <td>{{ $test['unit'] }}</td>
+                                    <td>{{ $test['reference'] }}</td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="4">Sin resultados registrados.</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </section>
+            </main>
         @endforeach
     @else
-        <h2>{{ $category['title'] }}</h2>
-        <table class="print-table">
-            <thead>
+        <header class="report-header">
+            <div class="report-brand">
+                @if (!empty($logoDataUri))
+                    <img class="report-logo" src="{{ $logoDataUri }}" alt="BIOLAB">
+                @endif
+                LABORATORIO
+                <span>BIOLAB</span>
+                TEL: {{ $business['phone'] }}
+            </div>
+            <div class="report-business">
+                <h1>{{ $business['name'] }}</h1>
+                <p>{{ $business['address'] }}</p>
+                <p>TELEFONOS: {{ $business['phone'] }}</p>
+                <h3>{{ $business['director'] }}</h3>
+                <p>{{ $business['credential'] }}</p>
+            </div>
+            <div class="report-side-space"></div>
+        </header>
+
+        <table class="patient-grid">
+            <tr>
+                <th>Nombre:</th>
+                <td>{{ $result['patient_name'] }}</td>
+                <th>Fecha:</th>
+                <td>{{ \Illuminate\Support\Carbon::parse($result['date'])->format('d/m/Y') }}</td>
+            </tr>
+            <tr>
+                <th>Edad:</th>
+                <td>{{ $result['age'] ?? '' }}</td>
+                <th>Refiere:</th>
+                <td>{{ $result['referred_by'] ?? '' }}</td>
+            </tr>
+        </table>
+
+        @if ($readyExamItems->isNotEmpty())
+            @foreach ($readyExamItems as $examItem)
+                <section class="exam-section">
+                    <h2>{{ $examItem['category_title'] }}</h2>
+                    <table class="print-table">
+                        <thead>
+                            <tr>
+                                <th>Analisis</th>
+                                <th>Resultado</th>
+                                <th>Unidades</th>
+                                <th>V.N.</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse (($examItem['tests'] ?? []) as $index => $test)
+                                <tr>
+                                    <td>{{ $test['name'] }}</td>
+                                    <td>{{ $examItem['results'][$index] ?? '' }}</td>
+                                    <td>{{ $test['unit'] }}</td>
+                                    <td>{{ $test['reference'] }}</td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="4">Sin resultados registrados.</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </section>
+            @endforeach
+        @else
+            <h2>{{ $category['title'] }}</h2>
+            <table class="print-table">
+                <thead>
                 <tr>
                     <th>Analisis</th>
                     <th>Resultado</th>
                     <th>Unidades</th>
                     <th>V.N.</th>
                 </tr>
-            </thead>
-            <tbody>
-                @forelse ($tests as $index => $test)
-                    <tr>
-                        <td>{{ $test['name'] }}</td>
-                        <td>{{ $result['results'][$index] ?? '' }}</td>
-                        <td>{{ $test['unit'] }}</td>
-                        <td>{{ $test['reference'] }}</td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="4">Sin resultados registrados.</td>
-                    </tr>
-                @endforelse
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    @forelse ($tests as $index => $test)
+                        <tr>
+                            <td>{{ $test['name'] }}</td>
+                            <td>{{ $result['results'][$index] ?? '' }}</td>
+                            <td>{{ $test['unit'] }}</td>
+                            <td>{{ $test['reference'] }}</td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="4">Sin resultados registrados.</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        @endif
     @endif
 
     <footer class="report-footer">
