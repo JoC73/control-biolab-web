@@ -120,6 +120,10 @@
             font-size: 10px;
         }
 
+        .print-table td:first-child {
+            text-transform: uppercase;
+        }
+
         .print-table thead {
             display: table-header-group;
         }

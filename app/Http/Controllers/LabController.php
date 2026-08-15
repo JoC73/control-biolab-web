@@ -219,7 +219,7 @@ class LabController extends Controller
                     || filled($data['results'][$index] ?? null);
             })
             ->map(fn (array $test) => [
-                'name' => $test['name'] ?? '',
+                'name' => mb_strtoupper(trim($test['name'] ?? ''), 'UTF-8'),
                 'unit' => $test['unit'] ?? '',
                 'reference' => $test['reference'] ?? '',
             ])

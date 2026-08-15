@@ -252,6 +252,31 @@ class BiolabCriticalFlowTest extends TestCase
             ->assertHeader('Content-Type', 'application/pdf');
     }
 
+    public function test_order_result_test_names_are_saved_uppercase(): void
+    {
+        $this->createOrderAsReception(['price' => 75, 'paid_amount' => 75]);
+        $order = app(OrderStore::class)->all()->first();
+
+        $this->actingAsBiolab('laboratorio')
+            ->post("/ordenes/{$order['id']}/resultados", [
+                'exam_index' => 0,
+                'tests' => [
+                    ['name' => 'eritrosedimentación', 'unit' => 'mm/hora', 'reference' => '0-20'],
+                    ['name' => 'FORMULA DIFERENCIAL', 'unit' => '', 'reference' => ''],
+                    ['name' => 'segmentados', 'unit' => '%', 'reference' => '40-60'],
+                ],
+                'results' => ['', '', ''],
+                'status' => 'ready',
+            ])
+            ->assertRedirect();
+
+        $tests = app(OrderStore::class)->examItems(app(OrderStore::class)->find($order['id']))[0]['tests'];
+
+        $this->assertSame('ERITROSEDIMENTACIÓN', $tests[0]['name']);
+        $this->assertSame('FORMULA DIFERENCIAL', $tests[1]['name']);
+        $this->assertSame('SEGMENTADOS', $tests[2]['name']);
+    }
+
     public function test_long_result_pdf_does_not_create_blank_first_page(): void
     {
         app(CatalogStore::class)->savePrice('orina', 75);

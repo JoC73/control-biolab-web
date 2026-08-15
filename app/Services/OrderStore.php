@@ -121,7 +121,7 @@ class OrderStore extends JsonStore
             $tests = collect($data['tests'] ?? [])
                 ->filter(fn (array $test, int $index) => filled($test['name'] ?? null) || filled($data['results'][$index] ?? null))
                 ->map(fn (array $test) => [
-                    'name' => $test['name'] ?? '',
+                    'name' => $this->upper(trim($test['name'] ?? '')),
                     'unit' => $test['unit'] ?? '',
                     'reference' => $test['reference'] ?? '',
                 ])
@@ -505,5 +505,10 @@ class OrderStore extends JsonStore
             'created_at' => $item['created_at'] ?? now(),
             'updated_at' => $item['updated_at'] ?? now(),
         ];
+    }
+
+    private function upper(string $value): string
+    {
+        return mb_strtoupper($value, 'UTF-8');
     }
 }

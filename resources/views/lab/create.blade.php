@@ -11,9 +11,9 @@
                 <a class="button" href="{{ route('lab.index') }}">Menu</a>
                 @if ($savedResult ?? null)
                     <a class="button" href="{{ route('lab.results.show', $savedResult['id']) }}">Cancelar</a>
-                    <button class="button primary" type="submit" form="result-form" formaction="{{ route('lab.results.update', $savedResult['id']) }}">Actualizar</button>
+                    <button class="button primary" type="submit" form="result-form" formaction="{{ route('lab.results.update', $savedResult['id']) }}">Guardar plantilla y resultado</button>
                 @else
-                    <button class="button primary" type="submit" form="result-form" formaction="{{ route('lab.results.save', $category['slug']) }}">Guardar</button>
+                    <button class="button primary" type="submit" form="result-form" formaction="{{ route('lab.results.save', $category['slug']) }}">Guardar plantilla y resultado</button>
                 @endif
             </div>
         </header>
@@ -114,9 +114,9 @@
                     <button class="button" type="button" data-add-row>Agregar campo</button>
                     <button class="button" type="submit">Vista previa</button>
                     @if ($savedResult ?? null)
-                        <button class="button primary" type="submit" formaction="{{ route('lab.results.update', $savedResult['id']) }}">Actualizar</button>
+                        <button class="button primary" type="submit" formaction="{{ route('lab.results.update', $savedResult['id']) }}">Guardar plantilla y resultado</button>
                     @else
-                        <button class="button primary" type="submit" formaction="{{ route('lab.results.save', $category['slug']) }}">Guardar</button>
+                        <button class="button primary" type="submit" formaction="{{ route('lab.results.save', $category['slug']) }}">Guardar plantilla y resultado</button>
                     @endif
                 </div>
             </section>

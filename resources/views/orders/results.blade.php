@@ -10,7 +10,7 @@
             </div>
             <div class="top-actions">
                 <a class="button" href="{{ route('orders.show', $order['id']) }}">Orden</a>
-                <button class="button primary" type="submit" form="results-form">Guardar</button>
+                <button class="button primary" type="submit" form="results-form">Guardar plantilla y resultados</button>
             </div>
         </header>
 
@@ -92,7 +92,7 @@
                         <option value="ready" @selected(($selectedExam['status'] ?? 'pending') === 'ready')>Resultado listo</option>
                     </select>
                     <button class="button" type="button" data-add-row>Agregar campo</button>
-                    <button class="button primary" type="submit">Guardar resultados</button>
+                    <button class="button primary" type="submit">Guardar plantilla y resultados</button>
                 </div>
             </section>
         </form>
