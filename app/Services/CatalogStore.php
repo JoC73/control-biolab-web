@@ -345,13 +345,14 @@ class CatalogStore extends JsonStore
         return match ($slug) {
             'hematologia' => $this->ensureHematologySections($tests),
             'orina' => $this->ensureUrineSections($tests),
+            'heces' => $this->ensureStoolSections($tests),
             default => $tests,
         };
     }
 
     private function ensureHematologySections(array $tests): array
     {
-        if ($this->hasTestName($tests, 'FORMULA DIFERENCIAL')) {
+        if ($this->hasSectionName($tests, 'FORMULA DIFERENCIAL')) {
             return $tests;
         }
 
@@ -392,13 +393,42 @@ class CatalogStore extends JsonStore
         ]);
     }
 
+    private function ensureStoolSections(array $tests): array
+    {
+        $tests = $this->prependIfMissing($tests, 'EXAMEN MACROSCOPICO');
+        $tests = $this->insertBeforeFirstMatch($tests, 'EXAMEN MICROSCOPICO', [
+            'MOCO',
+            'SANGRE OCULTA',
+        ]);
+        $tests = $this->insertBeforeFirstMatch($tests, 'PARASITOS', [
+            'PARASITO',
+            'PARASITOS',
+            'PARÁSITO',
+            'PARÁSITOS',
+        ]);
+        $tests = $this->appendSectionIfMissing($tests, 'HUEVOS');
+        $tests = $this->appendSectionIfMissing($tests, 'QUISTES');
+        $tests = $this->appendSectionIfMissing($tests, 'TROFOZOITOS');
+
+        return $this->appendSectionIfMissing($tests, 'OTROS:');
+    }
+
     private function prependIfMissing(array $tests, string $name): array
     {
-        if ($this->hasTestName($tests, $name)) {
+        if ($this->hasSectionName($tests, $name)) {
             return $tests;
         }
 
         array_unshift($tests, ['name' => $name, 'unit' => '', 'reference' => '']);
+
+        return $tests;
+    }
+
+    private function appendSectionIfMissing(array $tests, string $name): array
+    {
+        if (! $this->hasSectionName($tests, $name)) {
+            $tests[] = ['name' => $name, 'unit' => '', 'reference' => ''];
+        }
 
         return $tests;
     }
@@ -420,7 +450,7 @@ class CatalogStore extends JsonStore
 
     private function insertBeforeFirstMatch(array $tests, string $section, array $needles): array
     {
-        if ($this->hasTestName($tests, $section)) {
+        if ($this->hasSectionName($tests, $section)) {
             return $tests;
         }
 
@@ -440,6 +470,13 @@ class CatalogStore extends JsonStore
     private function hasTestName(array $tests, string $name): bool
     {
         return collect($tests)->contains(fn (array $test) => $this->upper($test['name'] ?? '') === $name);
+    }
+
+    private function hasSectionName(array $tests, string $name): bool
+    {
+        return collect($tests)->contains(fn (array $test) => $this->upper($test['name'] ?? '') === $name
+            && blank($test['unit'] ?? null)
+            && blank($test['reference'] ?? null));
     }
 
     private function upper(string $value): string

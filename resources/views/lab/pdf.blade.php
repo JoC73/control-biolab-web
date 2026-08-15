@@ -278,7 +278,7 @@
                             @forelse (($examItem['tests'] ?? []) as $index => $test)
                                 @php $isSection = blank($test['unit'] ?? null) && blank($test['reference'] ?? null) && blank($examItem['results'][$index] ?? null); @endphp
                                 @if ($isSection)
-                                    <tr class="section-row {{ ($examItem['category_slug'] ?? '') === 'orina' ? 'section-row-left' : 'section-row-center' }}">
+                                    <tr class="section-row {{ in_array(($examItem['category_slug'] ?? ''), ['orina', 'heces'], true) ? 'section-row-left' : 'section-row-center' }}">
                                         <td colspan="4">{{ $test['name'] }}</td>
                                     </tr>
                                 @else
@@ -351,7 +351,7 @@
                             @forelse (($examItem['tests'] ?? []) as $index => $test)
                                 @php $isSection = blank($test['unit'] ?? null) && blank($test['reference'] ?? null) && blank($examItem['results'][$index] ?? null); @endphp
                                 @if ($isSection)
-                                    <tr class="section-row {{ ($examItem['category_slug'] ?? '') === 'orina' ? 'section-row-left' : 'section-row-center' }}">
+                                    <tr class="section-row {{ in_array(($examItem['category_slug'] ?? ''), ['orina', 'heces'], true) ? 'section-row-left' : 'section-row-center' }}">
                                         <td colspan="4">{{ $test['name'] }}</td>
                                     </tr>
                                 @else
@@ -386,7 +386,7 @@
                     @forelse ($tests as $index => $test)
                         @php $isSection = blank($test['unit'] ?? null) && blank($test['reference'] ?? null) && blank($result['results'][$index] ?? null); @endphp
                         @if ($isSection)
-                            <tr class="section-row {{ ($category['slug'] ?? '') === 'orina' ? 'section-row-left' : 'section-row-center' }}">
+                            <tr class="section-row {{ in_array(($category['slug'] ?? ''), ['orina', 'heces'], true) ? 'section-row-left' : 'section-row-center' }}">
                                 <td colspan="4">{{ $test['name'] }}</td>
                             </tr>
                         @else

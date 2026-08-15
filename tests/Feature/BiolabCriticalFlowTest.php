@@ -430,6 +430,37 @@ class BiolabCriticalFlowTest extends TestCase
                                 <input type="hidden" name="tests[5][name]" value="FORMULA DIFERENCIAL"', false);
     }
 
+    public function test_stool_section_labels_render_left_aligned_with_section_add_controls(): void
+    {
+        app(CatalogStore::class)->savePrice('heces', 75);
+
+        $this->actingAsBiolab('recepcion')
+            ->post('/ordenes', $this->orderPayload([
+                'category_slug' => 'heces',
+                'exam_slugs' => ['heces'],
+                'exam_prices' => ['heces' => 75],
+                'price' => 75,
+                'paid_amount' => 75,
+            ]))
+            ->assertRedirect();
+
+        $order = app(OrderStore::class)->all()->first();
+
+        $this->actingAsBiolab('laboratorio')
+            ->get("/ordenes/{$order['id']}/resultados")
+            ->assertOk()
+            ->assertSee('EXAMEN MACROSCOPICO')
+            ->assertSee('EXAMEN MICROSCOPICO')
+            ->assertSee('PARASITOS')
+            ->assertSee('HUEVOS')
+            ->assertSee('QUISTES')
+            ->assertSee('TROFOZOITOS')
+            ->assertSee('OTROS:')
+            ->assertSee('result-section-label-left', false)
+            ->assertSee('data-add-after-section', false)
+            ->assertSee('Agregar aqui');
+    }
+
     public function test_multi_exam_order_uses_backend_prices_and_one_cash_movement(): void
     {
         $this->seedExamPrices();

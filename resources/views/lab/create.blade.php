@@ -20,6 +20,7 @@
 
         <form id="result-form" class="workbench" method="POST" action="{{ route('lab.results.preview', $category['slug']) }}">
             @csrf
+            @php $leftSectionSlugs = ['orina', 'heces']; @endphp
 
             <section class="panel form-panel">
                 <div class="field span-2">
@@ -74,9 +75,12 @@
                             $isSection = filled($test['name'] ?? null) && blank($test['unit'] ?? null) && blank($test['reference'] ?? null) && blank($resultValue);
                         @endphp
                         @if ($isSection)
-                            <div class="result-cell result-section-label @if(($category['slug'] ?? '') === 'orina') result-section-label-left @endif" data-section-row>
+                            <div class="result-cell result-section-label @if(in_array(($category['slug'] ?? ''), $leftSectionSlugs, true)) result-section-label-left @endif" data-section-row>
                                 <input type="hidden" name="tests[{{ $index }}][name]" value="{{ $test['name'] }}">
                                 <span>{{ $test['name'] }}</span>
+                                @if(in_array(($category['slug'] ?? ''), $leftSectionSlugs, true))
+                                    <button class="section-add-button" type="button" data-add-after-section>Agregar aqui</button>
+                                @endif
                             </div>
                             <div class="result-cell result-section-placeholder">
                                 <input type="hidden" name="results[{{ $index }}]" value="">
@@ -143,8 +147,7 @@
                 }
             };
 
-            const addRow = () => {
-                const index = rowCount();
+            const buildRow = (index) => {
                 const fragment = template.content.cloneNode(true);
 
                 fragment.querySelectorAll('input').forEach((input) => {
@@ -152,8 +155,40 @@
                     input.removeAttribute('data-name-template');
                 });
 
+                return fragment;
+            };
+
+            const focusRow = (index) => {
+                table.querySelector('input[name="tests[' + index + '][name]"]')?.focus();
+            };
+
+            const addRow = () => {
+                const index = rowCount();
+                const fragment = buildRow(index);
                 table.appendChild(fragment);
-                table.querySelector('input[name="tests[' + index + '][name]"]').focus();
+                focusRow(index);
+            };
+
+            const addRowAfterSection = (button) => {
+                const cells = Array.from(table.querySelectorAll('.result-cell'));
+                const sectionRow = Math.floor(cells.indexOf(button.closest('.result-cell')) / columns);
+                let insertRow = sectionRow + 1;
+
+                while (insertRow < rowCount() && !cells[insertRow * columns]?.hasAttribute('data-section-row')) {
+                    insertRow++;
+                }
+
+                const fragment = buildRow(insertRow);
+                const referenceCell = cells[insertRow * columns] ?? null;
+
+                if (referenceCell) {
+                    table.insertBefore(fragment, referenceCell);
+                } else {
+                    table.appendChild(fragment);
+                }
+
+                renameRows();
+                focusRow(insertRow);
             };
 
             const removeRow = (button) => {
@@ -181,6 +216,13 @@
 
                 if (button) {
                     removeRow(button);
+                    return;
+                }
+
+                const addAfterSectionButton = event.target.closest('[data-add-after-section]');
+
+                if (addAfterSectionButton) {
+                    addRowAfterSection(addAfterSectionButton);
                 }
             });
         })();

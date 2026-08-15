@@ -15,18 +15,53 @@
                 });
             }
         };
-        const addRow = () => {
-            const index = rowCount();
+        const buildRow = (index) => {
             const fragment = template.content.cloneNode(true);
             fragment.querySelectorAll('input').forEach((input) => {
                 input.name = input.dataset.nameTemplate.replace('__INDEX__', index);
                 input.removeAttribute('data-name-template');
             });
+
+            return fragment;
+        };
+        const focusRow = (index) => {
+            table.querySelector('input[name="tests[' + index + '][name]"]')?.focus();
+        };
+        const addRow = () => {
+            const index = rowCount();
+            const fragment = buildRow(index);
             table.appendChild(fragment);
-            table.querySelector('input[name="tests[' + index + '][name]"]').focus();
+            focusRow(index);
+        };
+        const addRowAfterSection = (button) => {
+            const cells = Array.from(table.querySelectorAll('.result-cell'));
+            const sectionRow = Math.floor(cells.indexOf(button.closest('.result-cell')) / columns);
+            let insertRow = sectionRow + 1;
+
+            while (insertRow < rowCount() && !cells[insertRow * columns]?.hasAttribute('data-section-row')) {
+                insertRow++;
+            }
+
+            const fragment = buildRow(insertRow);
+            const referenceCell = cells[insertRow * columns] ?? null;
+
+            if (referenceCell) {
+                table.insertBefore(fragment, referenceCell);
+            } else {
+                table.appendChild(fragment);
+            }
+
+            renameRows();
+            focusRow(insertRow);
         };
         document.querySelectorAll('[data-add-row]').forEach((button) => button.addEventListener('click', addRow));
         table.addEventListener('click', (event) => {
+            const addAfterSectionButton = event.target.closest('[data-add-after-section]');
+            if (addAfterSectionButton) {
+                addRowAfterSection(addAfterSectionButton);
+                return;
+            }
+
             const button = event.target.closest('[data-remove-row]');
             if (!button || rowCount() <= 1 || !confirm('Deseas eliminar esta fila?')) return;
             const cells = Array.from(table.querySelectorAll('.result-cell'));
