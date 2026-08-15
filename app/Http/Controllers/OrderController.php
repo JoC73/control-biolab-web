@@ -157,7 +157,6 @@ class OrderController extends Controller
         ]);
 
         $updated = $this->orders->updateResults($id, $data);
-        $this->syncExamTemplateFields($updated, (int) ($data['exam_index'] ?? 0));
         $this->audit->record('order_results_saved', 'order', $id, ['status' => $data['status']]);
 
         if ($updated && $this->orders->allExamItemsReady($updated)) {
@@ -166,6 +165,37 @@ class OrderController extends Controller
         }
 
         return redirect()->route('orders.show', $id)->with('status', 'Resultados guardados.');
+    }
+
+    public function saveTemplate(Request $request, string $id)
+    {
+        $order = $this->orders->find($id);
+        abort_if($order === null, 404);
+
+        $data = $request->validate([
+            'tests' => ['array'],
+            'tests.*.name' => ['nullable', 'string', 'max:120'],
+            'tests.*.unit' => ['nullable', 'string', 'max:60'],
+            'tests.*.reference' => ['nullable', 'string', 'max:120'],
+            'exam_index' => ['nullable', 'integer', 'min:0'],
+        ]);
+
+        $examIndex = (int) ($data['exam_index'] ?? 0);
+        $examItem = $this->orders->examItems($order)[$examIndex] ?? null;
+        abort_if($examItem === null, 404);
+
+        $template = $this->catalog->saveExamFields($examItem['category_slug'], $data['tests'] ?? []);
+
+        abort_if($template === null, 404);
+
+        $this->audit->record('catalog_exam_fields_updated', 'catalog', $template['slug'], [
+            'fields' => count($template['tests'] ?? []),
+            'source_order_id' => $order['id'],
+        ]);
+
+        return redirect()
+            ->route('orders.results', ['id' => $id, 'exam' => $examIndex])
+            ->with('status', 'Plantilla guardada correctamente.');
     }
 
     public function pay(Request $request, string $id)
@@ -398,28 +428,6 @@ class OrderController extends Controller
         }
 
         return $callback();
-    }
-
-    private function syncExamTemplateFields(?array $order, int $examIndex): void
-    {
-        if (! $order) {
-            return;
-        }
-
-        $examItem = $this->orders->examItems($order)[$examIndex] ?? null;
-
-        if (! $examItem) {
-            return;
-        }
-
-        $template = $this->catalog->saveExamFields($examItem['category_slug'], $examItem['tests'] ?? []);
-
-        if ($template) {
-            $this->audit->record('catalog_exam_fields_updated', 'catalog', $template['slug'], [
-                'fields' => count($template['tests'] ?? []),
-                'source_order_id' => $order['id'],
-            ]);
-        }
     }
 
     private function whatsappUrl(array $order): string

@@ -213,6 +213,19 @@ a {
     background: var(--blue-strong);
 }
 
+.button.template-button,
+.template-button {
+    border-color: #12805c;
+    background: linear-gradient(180deg, #159f73 0%, #087a56 100%);
+    color: #fff;
+}
+
+.button.template-button:hover,
+.template-button:hover {
+    border-color: #076b4b;
+    background: #076b4b;
+}
+
 .button.danger-button,
 .danger-button {
     border-color: #efb4ac;

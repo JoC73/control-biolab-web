@@ -402,14 +402,12 @@ class BiolabCriticalFlowTest extends TestCase
         $order = app(OrderStore::class)->all()->first();
 
         $this->actingAsBiolab('laboratorio')
-            ->post("/ordenes/{$order['id']}/resultados", [
+            ->post("/ordenes/{$order['id']}/plantilla", [
                 'exam_index' => 0,
                 'tests' => [
                     ['name' => 'Hemoglobina', 'unit' => 'g/dL', 'reference' => '12.0-17.0'],
                     ['name' => 'Campo persistente QA', 'unit' => 'u/L', 'reference' => '1-10'],
                 ],
-                'results' => ['13.5', '5'],
-                'status' => 'ready',
             ])
             ->assertRedirect();
 
@@ -432,7 +430,28 @@ class BiolabCriticalFlowTest extends TestCase
             ->assertRedirect();
 
         $updatedHematology = collect(app(CatalogStore::class)->categories())->firstWhere('slug', 'hematologia');
-        $this->assertNotContains('CAMPO PERSISTENTE QA', collect($updatedHematology['tests'])->pluck('name')->all());
+        $this->assertContains('CAMPO PERSISTENTE QA', collect($updatedHematology['tests'])->pluck('name')->all());
+    }
+
+    public function test_saving_result_does_not_update_exam_template_without_template_button(): void
+    {
+        $this->createOrderAsReception(['price' => 75, 'paid_amount' => 75]);
+        $order = app(OrderStore::class)->all()->first();
+
+        $this->actingAsBiolab('laboratorio')
+            ->post("/ordenes/{$order['id']}/resultados", [
+                'exam_index' => 0,
+                'tests' => [
+                    ['name' => 'Campo solo resultado QA', 'unit' => 'u/L', 'reference' => '1-10'],
+                ],
+                'results' => ['5'],
+                'status' => 'ready',
+            ])
+            ->assertRedirect();
+
+        $hematology = collect(app(CatalogStore::class)->categories())->firstWhere('slug', 'hematologia');
+
+        $this->assertNotContains('CAMPO SOLO RESULTADO QA', collect($hematology['tests'])->pluck('name')->all());
     }
 
     public function test_required_exam_section_labels_are_applied_and_uppercase(): void

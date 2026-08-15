@@ -65,6 +65,32 @@ class LabController extends Controller
             ->with('status', 'Resultado guardado correctamente.');
     }
 
+    public function saveTemplate(Request $request, string $category)
+    {
+        $categoryConfig = $this->findCategory($category);
+        abort_if($categoryConfig === null, 404);
+
+        $data = $request->validate([
+            'tests' => ['array'],
+            'tests.*.name' => ['nullable', 'string', 'max:120'],
+            'tests.*.unit' => ['nullable', 'string', 'max:60'],
+            'tests.*.reference' => ['nullable', 'string', 'max:120'],
+        ]);
+
+        $template = $this->catalog->saveExamFields($categoryConfig['slug'], $data['tests'] ?? []);
+
+        abort_if($template === null, 404);
+
+        $this->audit->record('catalog_exam_fields_updated', 'catalog', $template['slug'], [
+            'fields' => count($template['tests'] ?? []),
+            'source' => 'lab_result_form',
+        ]);
+
+        return redirect()
+            ->route('lab.results.create', $categoryConfig['slug'])
+            ->with('status', 'Plantilla guardada correctamente.');
+    }
+
     public function history(Request $request)
     {
         $this->syncOrderResultsToHistory();

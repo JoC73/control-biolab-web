@@ -22,6 +22,7 @@ Route::middleware('biolab.auth')->group(function () {
     Route::get('/ordenes/{id}', [OrderController::class, 'show'])->middleware('biolab.permission:orders.view')->name('orders.show');
     Route::get('/ordenes/{id}/resultados', [OrderController::class, 'results'])->middleware('biolab.permission:results.create,results.edit')->name('orders.results');
     Route::post('/ordenes/{id}/resultados', [OrderController::class, 'saveResults'])->middleware('biolab.permission:results.create,results.edit')->name('orders.results.save');
+    Route::post('/ordenes/{id}/plantilla', [OrderController::class, 'saveTemplate'])->middleware('biolab.permission:results.create,results.edit')->name('orders.results.template');
     Route::post('/ordenes/{id}/pago', [OrderController::class, 'pay'])->middleware('biolab.permission:payments.create')->name('orders.pay');
     Route::post('/ordenes/{id}/entregar', [OrderController::class, 'deliver'])->middleware('biolab.permission:orders.deliver')->name('orders.deliver');
     Route::post('/ordenes/{id}/anular', [OrderController::class, 'cancel'])->middleware('biolab.permission:orders.cancel')->name('orders.cancel');
@@ -43,6 +44,7 @@ Route::middleware('biolab.auth')->group(function () {
     Route::put('/admin/usuarios/{email}', [UserPermissionController::class, 'update'])->middleware('biolab.permission:users.manage')->name('admin.users.update');
     Route::get('/resultados/{category}/nuevo', [LabController::class, 'create'])->middleware('biolab.permission:results.create')->name('lab.results.create');
     Route::post('/resultados/{category}/vista-previa', [LabController::class, 'preview'])->middleware('biolab.permission:results.create,results.edit')->name('lab.results.preview');
+    Route::post('/resultados/{category}/plantilla', [LabController::class, 'saveTemplate'])->middleware('biolab.permission:results.create,results.edit')->name('lab.results.template');
     Route::post('/resultados/{category}/guardar', [LabController::class, 'save'])->middleware('biolab.permission:results.create')->name('lab.results.save');
     Route::post('/resultados/{category}/pdf', [LabController::class, 'pdf'])->middleware('biolab.permission:results.print')->name('lab.results.pdf');
     Route::get('/resultados/guardados/{id}', [LabController::class, 'show'])->middleware('biolab.permission:results.view')->name('lab.results.show');
