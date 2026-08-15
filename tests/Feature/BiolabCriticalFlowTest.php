@@ -277,6 +277,41 @@ class BiolabCriticalFlowTest extends TestCase
         $this->assertSame('SEGMENTADOS', $tests[2]['name']);
     }
 
+    public function test_pdf_output_does_not_render_editing_section_buttons(): void
+    {
+        $this->createOrderAsReception(['price' => 75, 'paid_amount' => 75]);
+        $order = app(OrderStore::class)->all()->first();
+
+        $this->actingAsBiolab('laboratorio')
+            ->post("/ordenes/{$order['id']}/resultados", [
+                'exam_index' => 0,
+                'tests' => [
+                    ['name' => 'ERITROSEDIMENTACIÓN', 'unit' => 'mm/hora', 'reference' => '0-20'],
+                    ['name' => 'FORMULA DIFERENCIAL', 'unit' => '', 'reference' => ''],
+                    ['name' => 'SEGMENTADOS', 'unit' => '%', 'reference' => '40-60'],
+                ],
+                'results' => ['10', '', '58'],
+                'status' => 'ready',
+            ])
+            ->assertRedirect();
+
+        $ready = app(OrderStore::class)->find($order['id']);
+        $html = view('orders.pdf', [
+            'business' => config('lab.business'),
+            'order' => $ready,
+            'examItems' => app(OrderStore::class)->examItems($ready),
+            'logoDataUri' => '',
+            'signatureDataUri' => '',
+        ])->render();
+
+        $this->assertStringContainsString('FORMULA DIFERENCIAL', $html);
+        $this->assertStringNotContainsString('Agregar antes', $html);
+        $this->assertStringNotContainsString('Agregar aqui', $html);
+        $this->assertStringNotContainsString('data-add-before-section', $html);
+        $this->assertStringNotContainsString('data-add-after-section', $html);
+        $this->assertStringNotContainsString('section-add-button', $html);
+    }
+
     public function test_long_result_pdf_does_not_create_blank_first_page(): void
     {
         app(CatalogStore::class)->savePrice('orina', 75);
