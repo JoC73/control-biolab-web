@@ -408,6 +408,14 @@ class BiolabCriticalFlowTest extends TestCase
             ->assertSee('type="hidden" name="tests[5][name]" value="FORMULA DIFERENCIAL"', false);
     }
 
+    public function test_section_add_script_stops_before_empty_rows(): void
+    {
+        $script = file_get_contents(resource_path('views/orders/results-script.blade.php'));
+
+        $this->assertStringContainsString('isEmptyDataRow', $script);
+        $this->assertStringContainsString('&& !isEmptyDataRow(cells, insertRow)', $script);
+    }
+
     public function test_urine_section_labels_render_left_aligned(): void
     {
         app(CatalogStore::class)->savePrice('orina', 75);

@@ -165,6 +165,20 @@
                 table.querySelector('input[name="tests[' + index + '][name]"]')?.focus();
             };
 
+            const isEmptyDataRow = (cells, row) => {
+                const rowCells = cells.slice(row * columns, row * columns + columns);
+
+                if (rowCells[0]?.hasAttribute('data-section-row')) {
+                    return false;
+                }
+
+                return rowCells.length === columns && rowCells.every((cell) => {
+                    const input = cell.querySelector('input');
+
+                    return !input || input.value.trim() === '';
+                });
+            };
+
             const addRow = () => {
                 const index = rowCount();
                 const fragment = buildRow(index);
@@ -177,7 +191,11 @@
                 const sectionRow = Math.floor(cells.indexOf(button.closest('.result-cell')) / columns);
                 let insertRow = sectionRow + 1;
 
-                while (insertRow < rowCount() && !cells[insertRow * columns]?.hasAttribute('data-section-row')) {
+                while (
+                    insertRow < rowCount()
+                    && !cells[insertRow * columns]?.hasAttribute('data-section-row')
+                    && !isEmptyDataRow(cells, insertRow)
+                ) {
                     insertRow++;
                 }
 
