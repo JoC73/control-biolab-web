@@ -32,7 +32,7 @@ class CatalogStore extends JsonStore
                     return array_merge($category, [
                         'name' => $override['name'] ?? $category['name'],
                         'title' => $override['title'] ?? $category['title'],
-                        'tests' => $override['tests'] ?? $category['tests'],
+                        'tests' => $this->normalizeTemplateForCategory($category['slug'], $override['tests'] ?? $category['tests']),
                         'custom' => false,
                     ]);
                 })
@@ -60,7 +60,7 @@ class CatalogStore extends JsonStore
                 return array_merge($category, [
                     'name' => $override['name'] ?? $category['name'],
                     'title' => $override['title'] ?? $category['title'],
-                    'tests' => $override['tests'] ?? $category['tests'],
+                    'tests' => $this->normalizeTemplateForCategory($category['slug'], $override['tests'] ?? $category['tests']),
                     'custom' => false,
                 ]);
             })
@@ -330,12 +330,121 @@ class CatalogStore extends JsonStore
         return collect($tests)
             ->filter(fn (array $test) => filled($test['name'] ?? null) || filled($test['unit'] ?? null) || filled($test['reference'] ?? null))
             ->map(fn (array $test) => [
-                'name' => trim($test['name'] ?? ''),
+                'name' => $this->upper(trim($test['name'] ?? '')),
                 'unit' => trim($test['unit'] ?? ''),
                 'reference' => trim($test['reference'] ?? ''),
             ])
             ->values()
             ->all();
+    }
+
+    private function normalizeTemplateForCategory(string $slug, array $tests): array
+    {
+        $tests = $this->normalizeTests($tests);
+
+        return match ($slug) {
+            'hematologia' => $this->ensureHematologySections($tests),
+            'orina' => $this->ensureUrineSections($tests),
+            default => $tests,
+        };
+    }
+
+    private function ensureHematologySections(array $tests): array
+    {
+        if ($this->hasTestName($tests, 'FORMULA DIFERENCIAL')) {
+            return $tests;
+        }
+
+        return $this->insertAfterFirstMatch($tests, ['PLAQUETAS', 'RECUENTO DE PLAQUETAS'], [
+            'name' => 'FORMULA DIFERENCIAL',
+            'unit' => '',
+            'reference' => '',
+        ]);
+    }
+
+    private function ensureUrineSections(array $tests): array
+    {
+        $tests = $this->prependIfMissing($tests, 'EXAMEN FISICO');
+        $tests = $this->insertBeforeFirstMatch($tests, 'EXAMEN QUIMICO', [
+            'LEUCOCITOS',
+            'NITRITOS',
+            'PROTEINAS',
+            'PROTEÍNAS',
+            'GLUCOSA',
+            'CETONAS',
+            'BILIRRUBINAS',
+            'UROBILINOGENO',
+            'UROBILINÓGENO',
+            'SANGRE',
+            'HEMOGLOBINA',
+        ]);
+
+        return $this->insertBeforeFirstMatch($tests, 'EXAMEN MICROSCOPICO', [
+            'CELULAS EPITELIALES',
+            'CÉLULAS EPITELIALES',
+            'ERITROCITOS',
+            'BACTERIAS',
+            'LEVADURAS',
+            'MICELIO',
+            'CRISTALES',
+            'CILINDROS',
+            'OTROS',
+        ]);
+    }
+
+    private function prependIfMissing(array $tests, string $name): array
+    {
+        if ($this->hasTestName($tests, $name)) {
+            return $tests;
+        }
+
+        array_unshift($tests, ['name' => $name, 'unit' => '', 'reference' => '']);
+
+        return $tests;
+    }
+
+    private function insertAfterFirstMatch(array $tests, array $needles, array $row): array
+    {
+        $index = collect($tests)->search(fn (array $test) => in_array($this->upper($test['name'] ?? ''), $needles, true));
+
+        if ($index === false) {
+            $tests[] = $row;
+
+            return $tests;
+        }
+
+        array_splice($tests, $index + 1, 0, [$row]);
+
+        return $tests;
+    }
+
+    private function insertBeforeFirstMatch(array $tests, string $section, array $needles): array
+    {
+        if ($this->hasTestName($tests, $section)) {
+            return $tests;
+        }
+
+        $index = collect($tests)->search(fn (array $test) => in_array($this->upper($test['name'] ?? ''), $needles, true));
+
+        if ($index === false) {
+            $tests[] = ['name' => $section, 'unit' => '', 'reference' => ''];
+
+            return $tests;
+        }
+
+        array_splice($tests, $index, 0, [['name' => $section, 'unit' => '', 'reference' => '']]);
+
+        return $tests;
+    }
+
+    private function hasTestName(array $tests, string $name): bool
+    {
+        return collect($tests)->contains(fn (array $test) => $this->upper($test['name'] ?? '') === $name);
+    }
+
+    private function upper(string $value): string
+    {
+        return mb_strtoupper($value, 'UTF-8');
     }
 
     private function usesDatabase(): bool

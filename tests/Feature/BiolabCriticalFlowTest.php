@@ -354,11 +354,11 @@ class BiolabCriticalFlowTest extends TestCase
             ->assertRedirect();
 
         $hematology = collect(app(CatalogStore::class)->categories())->firstWhere('slug', 'hematologia');
-        $this->assertContains('Campo persistente QA', collect($hematology['tests'])->pluck('name')->all());
+        $this->assertContains('CAMPO PERSISTENTE QA', collect($hematology['tests'])->pluck('name')->all());
 
         $this->createOrderAsReception(['price' => 75, 'paid_amount' => 75]);
         $newOrder = app(OrderStore::class)->all()->last();
-        $this->assertContains('Campo persistente QA', collect($newOrder['tests'])->pluck('name')->all());
+        $this->assertContains('CAMPO PERSISTENTE QA', collect($newOrder['tests'])->pluck('name')->all());
 
         $this->actingAsBiolab('laboratorio')
             ->post("/ordenes/{$newOrder['id']}/resultados", [
@@ -372,7 +372,23 @@ class BiolabCriticalFlowTest extends TestCase
             ->assertRedirect();
 
         $updatedHematology = collect(app(CatalogStore::class)->categories())->firstWhere('slug', 'hematologia');
-        $this->assertNotContains('Campo persistente QA', collect($updatedHematology['tests'])->pluck('name')->all());
+        $this->assertNotContains('CAMPO PERSISTENTE QA', collect($updatedHematology['tests'])->pluck('name')->all());
+    }
+
+    public function test_required_exam_section_labels_are_applied_and_uppercase(): void
+    {
+        $catalog = app(CatalogStore::class);
+        $hematology = collect($catalog->categories())->firstWhere('slug', 'hematologia');
+        $urine = collect($catalog->categories())->firstWhere('slug', 'orina');
+
+        $this->assertContains('FORMULA DIFERENCIAL', collect($hematology['tests'])->pluck('name')->all());
+        $this->assertContains('EXAMEN FISICO', collect($urine['tests'])->pluck('name')->all());
+        $this->assertContains('EXAMEN QUIMICO', collect($urine['tests'])->pluck('name')->all());
+        $this->assertContains('EXAMEN MICROSCOPICO', collect($urine['tests'])->pluck('name')->all());
+
+        foreach (array_merge($hematology['tests'], $urine['tests']) as $test) {
+            $this->assertSame(mb_strtoupper($test['name'], 'UTF-8'), $test['name']);
+        }
     }
 
     public function test_multi_exam_order_uses_backend_prices_and_one_cash_movement(): void

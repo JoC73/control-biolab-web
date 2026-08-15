@@ -128,6 +128,15 @@
             page-break-inside: avoid;
         }
 
+        .section-row td {
+            padding-top: 7px;
+            color: #111827;
+            font-weight: bold;
+            text-decoration: underline;
+            text-transform: uppercase;
+            border-bottom: 0;
+        }
+
         .exam-section {
             page-break-inside: auto;
             margin-bottom: 8px;
@@ -256,12 +265,19 @@
                         </thead>
                         <tbody>
                             @forelse (($examItem['tests'] ?? []) as $index => $test)
-                                <tr>
-                                    <td>{{ $test['name'] }}</td>
-                                    <td>{{ $examItem['results'][$index] ?? '' }}</td>
-                                    <td>{{ $test['unit'] }}</td>
-                                    <td>{{ $test['reference'] }}</td>
-                                </tr>
+                                @php $isSection = blank($test['unit'] ?? null) && blank($test['reference'] ?? null) && blank($examItem['results'][$index] ?? null); @endphp
+                                @if ($isSection)
+                                    <tr class="section-row">
+                                        <td colspan="4">{{ $test['name'] }}</td>
+                                    </tr>
+                                @else
+                                    <tr>
+                                        <td>{{ $test['name'] }}</td>
+                                        <td>{{ $examItem['results'][$index] ?? '' }}</td>
+                                        <td>{{ $test['unit'] }}</td>
+                                        <td>{{ $test['reference'] }}</td>
+                                    </tr>
+                                @endif
                             @empty
                                 <tr>
                                     <td colspan="4">Sin resultados registrados.</td>
@@ -322,12 +338,19 @@
                         </thead>
                         <tbody>
                             @forelse (($examItem['tests'] ?? []) as $index => $test)
-                                <tr>
-                                    <td>{{ $test['name'] }}</td>
-                                    <td>{{ $examItem['results'][$index] ?? '' }}</td>
-                                    <td>{{ $test['unit'] }}</td>
-                                    <td>{{ $test['reference'] }}</td>
-                                </tr>
+                                @php $isSection = blank($test['unit'] ?? null) && blank($test['reference'] ?? null) && blank($examItem['results'][$index] ?? null); @endphp
+                                @if ($isSection)
+                                    <tr class="section-row">
+                                        <td colspan="4">{{ $test['name'] }}</td>
+                                    </tr>
+                                @else
+                                    <tr>
+                                        <td>{{ $test['name'] }}</td>
+                                        <td>{{ $examItem['results'][$index] ?? '' }}</td>
+                                        <td>{{ $test['unit'] }}</td>
+                                        <td>{{ $test['reference'] }}</td>
+                                    </tr>
+                                @endif
                             @empty
                                 <tr>
                                     <td colspan="4">Sin resultados registrados.</td>
@@ -350,12 +373,19 @@
                 </thead>
                 <tbody>
                     @forelse ($tests as $index => $test)
-                        <tr>
-                            <td>{{ $test['name'] }}</td>
-                            <td>{{ $result['results'][$index] ?? '' }}</td>
-                            <td>{{ $test['unit'] }}</td>
-                            <td>{{ $test['reference'] }}</td>
-                        </tr>
+                        @php $isSection = blank($test['unit'] ?? null) && blank($test['reference'] ?? null) && blank($result['results'][$index] ?? null); @endphp
+                        @if ($isSection)
+                            <tr class="section-row">
+                                <td colspan="4">{{ $test['name'] }}</td>
+                            </tr>
+                        @else
+                            <tr>
+                                <td>{{ $test['name'] }}</td>
+                                <td>{{ $result['results'][$index] ?? '' }}</td>
+                                <td>{{ $test['unit'] }}</td>
+                                <td>{{ $test['reference'] }}</td>
+                            </tr>
+                        @endif
                     @empty
                         <tr>
                             <td colspan="4">Sin resultados registrados.</td>
