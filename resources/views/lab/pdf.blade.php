@@ -6,8 +6,8 @@
         body {
             font-family: DejaVu Sans, sans-serif;
             color: #111827;
-            font-size: 12px;
-            margin: 20px 28px 132px;
+            font-size: 10.5px;
+            margin: 16px 28px 102px;
         }
 
         .report-header {
@@ -15,7 +15,7 @@
             width: 100%;
             border-top: 4px solid #4b5563;
             border-bottom: 3px double #0f4c81;
-            padding: 8px 0 6px;
+            padding: 6px 0 5px;
         }
 
         .report-brand,
@@ -33,9 +33,9 @@
         }
 
         .report-logo {
-            width: 64px;
-            height: 48px;
-            margin: 0 auto 3px;
+            width: 52px;
+            height: 38px;
+            margin: 0 auto 2px;
         }
 
         .report-brand strong,
@@ -46,8 +46,8 @@
 
         .report-brand span {
             color: #0f4c81;
-            font-size: 19px;
-            letter-spacing: 5px;
+            font-size: 16px;
+            letter-spacing: 4px;
         }
 
         .report-business {
@@ -64,14 +64,14 @@
         h1 {
             margin: 0 0 4px;
             color: #0f416d;
-            font-size: 17px;
+            font-size: 15px;
             text-transform: uppercase;
         }
 
         h3 {
             margin: 4px 0 0;
             color: #0f416d;
-            font-size: 14px;
+            font-size: 12px;
         }
 
         p {
@@ -80,7 +80,7 @@
 
         .patient-grid {
             width: 100%;
-            margin: 20px 0 18px;
+            margin: 12px 0 10px;
             border-collapse: collapse;
         }
 
@@ -92,14 +92,15 @@
 
         .patient-grid td {
             border-bottom: 1px solid #9ca3af;
-            padding: 5px 8px;
+            padding: 3px 8px;
         }
 
         h2 {
-            margin: 18px 0;
+            margin: 8px 0 6px;
             text-align: center;
             text-transform: uppercase;
-            font-size: 16px;
+            font-size: 14px;
+            page-break-after: avoid;
         }
 
         .print-table {
@@ -109,32 +110,43 @@
 
         .print-table th,
         .print-table td {
-            padding: 8px 7px;
+            padding: 3px 7px;
             border-bottom: 1px solid #d1d5db;
             text-align: left;
         }
 
         .print-table th {
             text-transform: uppercase;
-            font-size: 11px;
+            font-size: 10px;
+        }
+
+        .print-table thead {
+            display: table-header-group;
+        }
+
+        .print-table tr {
+            page-break-inside: avoid;
         }
 
         .exam-section {
-            page-break-inside: avoid;
-            margin-bottom: 18px;
+            page-break-inside: auto;
+            margin-bottom: 8px;
         }
 
         .report-footer {
             position: fixed;
             right: 28px;
-            bottom: 14px;
+            bottom: 10px;
             left: 28px;
-            border-top: 2px solid #111827;
-            padding-top: 16px;
             text-align: center;
             color: #0f416d;
             font-weight: bold;
-            line-height: 1.12;
+            line-height: 1.06;
+        }
+
+        .footer-rule {
+            border-top: 2px solid #111827;
+            margin-bottom: 14px;
         }
 
         .footer-seal {
@@ -154,29 +166,29 @@
         }
 
         .mini-stamp {
-            width: 118px;
-            min-height: 54px;
+            width: 100px;
+            min-height: 42px;
             border: 1px solid #7b9ec0;
             color: #0f4c81;
-            font-size: 7px;
+            font-size: 6px;
             line-height: 1.05;
             text-align: center;
         }
 
         .mini-logo {
-            width: 30px;
-            height: 22px;
-            margin-top: 3px;
+            width: 22px;
+            height: 16px;
+            margin-top: 2px;
         }
 
         .mini-stamp strong {
             display: block;
-            font-size: 12px;
-            letter-spacing: 3px;
+            font-size: 10px;
+            letter-spacing: 2px;
         }
 
         .signature-img {
-            width: 116px;
+            width: 96px;
             height: auto;
             margin: 0 0 0 28px;
         }
@@ -277,6 +289,7 @@
     @endif
 
     <footer class="report-footer">
+        <div class="footer-rule"></div>
         <div class="footer-seal">
             <div class="mini-stamp">
                 @if (!empty($logoDataUri))

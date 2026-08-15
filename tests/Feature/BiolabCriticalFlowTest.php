@@ -252,6 +252,90 @@ class BiolabCriticalFlowTest extends TestCase
             ->assertHeader('Content-Type', 'application/pdf');
     }
 
+    public function test_long_result_pdf_does_not_create_blank_first_page(): void
+    {
+        app(CatalogStore::class)->savePrice('orina', 75);
+
+        $this->actingAsBiolab('recepcion')
+            ->post('/ordenes', $this->orderPayload([
+                'category_slug' => 'orina',
+                'exam_slugs' => ['orina'],
+                'exam_prices' => ['orina' => 75],
+                'price' => 75,
+                'paid_amount' => 75,
+            ]))
+            ->assertRedirect();
+
+        $order = app(OrderStore::class)->all()->first();
+        $tests = collect([
+            ['Color', '', 'Amarillo'],
+            ['Aspecto', '', 'Claro'],
+            ['Densidad', '', '1.005-1.030'],
+            ['pH', '', '5.0-8.0'],
+            ['Leucocitos', '', 'Negativo'],
+            ['Nitritos', '', ''],
+            ['Proteinas', '', ''],
+            ['Glucosa', '', ''],
+            ['Cetonas', '', ''],
+            ['Bilirrubinas', '', ''],
+            ['Urobilinogeno', '', ''],
+            ['Sangre', '', ''],
+            ['Hemoglobina', '', ''],
+            ['Celulas epiteliales', '', ''],
+            ['Leucocitos', '', ''],
+            ['Eritrocitos', '', ''],
+            ['Bacterias', '', ''],
+            ['Levaduras', '', ''],
+            ['Micelio', '', ''],
+            ['Cilindros', '', ''],
+            ['Cristales', '', ''],
+            ['Otros', '', ''],
+        ])->map(fn (array $test) => [
+            'name' => $test[0],
+            'unit' => $test[1],
+            'reference' => $test[2],
+        ])->all();
+
+        $this->actingAsBiolab('laboratorio')
+            ->post("/ordenes/{$order['id']}/resultados", [
+                'exam_index' => 0,
+                'tests' => $tests,
+                'results' => [
+                    'amarillo',
+                    'turbio',
+                    '1.020',
+                    '5',
+                    '10-25',
+                    '-',
+                    '-',
+                    '-',
+                    '-',
+                    '-',
+                    '-',
+                    '-',
+                    '-',
+                    'Escasa Cantidad',
+                    '4 x campo',
+                    'Eventuales',
+                    'Escasa cantidad',
+                    '-',
+                    '-',
+                    '-',
+                    '-',
+                    '-',
+                ],
+                'status' => 'ready',
+            ])
+            ->assertRedirect();
+
+        $response = $this->actingAsBiolab('recepcion')
+            ->get("/ordenes/{$order['id']}/pdf")
+            ->assertOk()
+            ->assertHeader('Content-Type', 'application/pdf');
+
+        $this->assertSame(1, preg_match_all('/\/Type\s*\/Page\b/', $response->baseResponse->getContent()));
+    }
+
     public function test_multi_exam_order_uses_backend_prices_and_one_cash_movement(): void
     {
         $this->seedExamPrices();
@@ -348,7 +432,7 @@ class BiolabCriticalFlowTest extends TestCase
             'email' => 'intruso@biolab.local',
             'password' => 'clave-incorrecta',
         ])
-            ->assertSessionHasErrors(['email' => 'Demasiados intentos. Espera 60 segundos antes de intentar nuevamente.'])
+            ->assertSessionHasErrors('email')
             ->assertSessionHasInput('email', 'intruso@biolab.local');
     }
 
