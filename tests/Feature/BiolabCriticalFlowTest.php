@@ -336,6 +336,45 @@ class BiolabCriticalFlowTest extends TestCase
         $this->assertSame(1, preg_match_all('/\/Type\s*\/Page\b/', $response->baseResponse->getContent()));
     }
 
+    public function test_result_field_changes_persist_in_exam_template(): void
+    {
+        $this->createOrderAsReception(['price' => 75, 'paid_amount' => 75]);
+        $order = app(OrderStore::class)->all()->first();
+
+        $this->actingAsBiolab('laboratorio')
+            ->post("/ordenes/{$order['id']}/resultados", [
+                'exam_index' => 0,
+                'tests' => [
+                    ['name' => 'Hemoglobina', 'unit' => 'g/dL', 'reference' => '12.0-17.0'],
+                    ['name' => 'Campo persistente QA', 'unit' => 'u/L', 'reference' => '1-10'],
+                ],
+                'results' => ['13.5', '5'],
+                'status' => 'ready',
+            ])
+            ->assertRedirect();
+
+        $hematology = collect(app(CatalogStore::class)->categories())->firstWhere('slug', 'hematologia');
+        $this->assertContains('Campo persistente QA', collect($hematology['tests'])->pluck('name')->all());
+
+        $this->createOrderAsReception(['price' => 75, 'paid_amount' => 75]);
+        $newOrder = app(OrderStore::class)->all()->last();
+        $this->assertContains('Campo persistente QA', collect($newOrder['tests'])->pluck('name')->all());
+
+        $this->actingAsBiolab('laboratorio')
+            ->post("/ordenes/{$newOrder['id']}/resultados", [
+                'exam_index' => 0,
+                'tests' => [
+                    ['name' => 'Hemoglobina', 'unit' => 'g/dL', 'reference' => '12.0-17.0'],
+                ],
+                'results' => ['14.0'],
+                'status' => 'ready',
+            ])
+            ->assertRedirect();
+
+        $updatedHematology = collect(app(CatalogStore::class)->categories())->firstWhere('slug', 'hematologia');
+        $this->assertNotContains('Campo persistente QA', collect($updatedHematology['tests'])->pluck('name')->all());
+    }
+
     public function test_multi_exam_order_uses_backend_prices_and_one_cash_movement(): void
     {
         $this->seedExamPrices();

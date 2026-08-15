@@ -157,6 +157,7 @@ class OrderController extends Controller
         ]);
 
         $updated = $this->orders->updateResults($id, $data);
+        $this->syncExamTemplateFields($updated, (int) ($data['exam_index'] ?? 0));
         $this->audit->record('order_results_saved', 'order', $id, ['status' => $data['status']]);
 
         if ($updated && $this->orders->allExamItemsReady($updated)) {
@@ -397,6 +398,28 @@ class OrderController extends Controller
         }
 
         return $callback();
+    }
+
+    private function syncExamTemplateFields(?array $order, int $examIndex): void
+    {
+        if (! $order) {
+            return;
+        }
+
+        $examItem = $this->orders->examItems($order)[$examIndex] ?? null;
+
+        if (! $examItem) {
+            return;
+        }
+
+        $template = $this->catalog->saveExamFields($examItem['category_slug'], $examItem['tests'] ?? []);
+
+        if ($template) {
+            $this->audit->record('catalog_exam_fields_updated', 'catalog', $template['slug'], [
+                'fields' => count($template['tests'] ?? []),
+                'source_order_id' => $order['id'],
+            ]);
+        }
     }
 
     private function whatsappUrl(array $order): string

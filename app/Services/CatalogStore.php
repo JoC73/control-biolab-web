@@ -9,10 +9,12 @@ class CatalogStore extends JsonStore
 {
     public function categories(): array
     {
+        $baseCategories = collect(config('lab.categories'));
+        $baseSlugs = $baseCategories->pluck('slug')->all();
+
         if ($this->usesDatabase()) {
             $saved = DB::table('custom_exam_templates')
                 ->where('active', true)
-                ->orderBy('name')
                 ->get()
                 ->map(fn ($item) => [
                     'slug' => $item->slug,
@@ -21,12 +23,20 @@ class CatalogStore extends JsonStore
                     'tests' => $this->decodeJson($item->tests),
                     'custom' => true,
                 ])
-                ->all();
+                ->keyBy('slug');
 
-            return collect(config('lab.categories'))
-                ->map(fn (array $category) => $category + ['custom' => false])
-                ->merge($saved)
-                ->unique('slug')
+            return $baseCategories
+                ->map(function (array $category) use ($saved) {
+                    $override = $saved->get($category['slug']);
+
+                    return array_merge($category, [
+                        'name' => $override['name'] ?? $category['name'],
+                        'title' => $override['title'] ?? $category['title'],
+                        'tests' => $override['tests'] ?? $category['tests'],
+                        'custom' => false,
+                    ]);
+                })
+                ->merge($saved->reject(fn (array $item) => in_array($item['slug'], $baseSlugs, true))->sortBy('name')->values())
                 ->values()
                 ->all();
         }
@@ -41,13 +51,20 @@ class CatalogStore extends JsonStore
                 'tests' => array_values($item['tests'] ?? []),
                 'custom' => true,
             ])
-            ->values()
-            ->all();
+            ->keyBy('slug');
 
-        return collect(config('lab.categories'))
-            ->map(fn (array $category) => $category + ['custom' => false])
-            ->merge($saved)
-            ->unique('slug')
+        return $baseCategories
+            ->map(function (array $category) use ($saved) {
+                $override = $saved->get($category['slug']);
+
+                return array_merge($category, [
+                    'name' => $override['name'] ?? $category['name'],
+                    'title' => $override['title'] ?? $category['title'],
+                    'tests' => $override['tests'] ?? $category['tests'],
+                    'custom' => false,
+                ]);
+            })
+            ->merge($saved->reject(fn (array $item) => in_array($item['slug'], $baseSlugs, true))->sortBy('name')->values())
             ->values()
             ->all();
     }
@@ -158,15 +175,7 @@ class CatalogStore extends JsonStore
     public function saveExam(array $data): array
     {
         $slug = $this->uniqueSlug($data['name']);
-        $tests = collect($data['tests'] ?? [])
-            ->filter(fn (array $test) => filled($test['name'] ?? null) || filled($test['unit'] ?? null) || filled($test['reference'] ?? null))
-            ->map(fn (array $test) => [
-                'name' => trim($test['name'] ?? ''),
-                'unit' => trim($test['unit'] ?? ''),
-                'reference' => trim($test['reference'] ?? ''),
-            ])
-            ->values()
-            ->all();
+        $tests = $this->normalizeTests($data['tests'] ?? []);
 
         if ($this->usesDatabase()) {
             $record = [
@@ -214,6 +223,70 @@ class CatalogStore extends JsonStore
         return $record;
     }
 
+    public function saveExamFields(string $slug, array $tests): ?array
+    {
+        $category = collect($this->categories())->firstWhere('slug', $slug);
+
+        if (! $category) {
+            return null;
+        }
+
+        $tests = $this->normalizeTests($tests);
+        $name = trim($category['name']);
+        $title = trim(($category['title'] ?? '') ?: $name);
+
+        if ($this->usesDatabase()) {
+            $existing = DB::table('custom_exam_templates')->where('slug', $slug)->first();
+            $payload = [
+                'name' => $name,
+                'title' => $title,
+                'tests' => json_encode($tests, JSON_UNESCAPED_UNICODE),
+                'active' => true,
+                'updated_at' => now(),
+            ];
+
+            if ($existing) {
+                DB::table('custom_exam_templates')->where('slug', $slug)->update($payload);
+            } else {
+                DB::table('custom_exam_templates')->insert($payload + [
+                    'id' => (string) Str::uuid(),
+                    'slug' => $slug,
+                    'created_at' => now(),
+                ]);
+            }
+
+            return [
+                'slug' => $slug,
+                'name' => $name,
+                'title' => $title,
+                'tests' => $tests,
+                'active' => true,
+            ];
+        }
+
+        $records = collect($this->read())
+            ->reject(fn (array $item) => ($item['type'] ?? null) === 'exam' && ($item['slug'] ?? null) === $slug)
+            ->values()
+            ->all();
+
+        $record = [
+            'id' => (string) Str::uuid(),
+            'type' => 'exam',
+            'slug' => $slug,
+            'name' => $name,
+            'title' => $title,
+            'tests' => $tests,
+            'active' => true,
+            'created_at' => now()->toDateTimeString(),
+            'updated_at' => now()->toDateTimeString(),
+        ];
+
+        $records[] = $record;
+        $this->write($records);
+
+        return $record;
+    }
+
     public function deleteExam(string $slug): void
     {
         if ($this->usesDatabase()) {
@@ -250,6 +323,19 @@ class CatalogStore extends JsonStore
         }
 
         return $slug;
+    }
+
+    private function normalizeTests(array $tests): array
+    {
+        return collect($tests)
+            ->filter(fn (array $test) => filled($test['name'] ?? null) || filled($test['unit'] ?? null) || filled($test['reference'] ?? null))
+            ->map(fn (array $test) => [
+                'name' => trim($test['name'] ?? ''),
+                'unit' => trim($test['unit'] ?? ''),
+                'reference' => trim($test['reference'] ?? ''),
+            ])
+            ->values()
+            ->all();
     }
 
     private function usesDatabase(): bool
