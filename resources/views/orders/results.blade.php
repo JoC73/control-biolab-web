@@ -58,6 +58,9 @@
                             <div class="result-cell result-section-label @if(in_array(($selectedExam['category_slug'] ?? ''), $leftSectionSlugs, true)) result-section-label-left @endif @if(in_array(($selectedExam['category_slug'] ?? ''), $sectionAddSlugs, true)) result-section-with-action @endif" data-section-row>
                                 <input type="hidden" name="tests[{{ $index }}][name]" value="{{ $test['name'] }}">
                                 <span>{{ $test['name'] }}</span>
+                                @if(($selectedExam['category_slug'] ?? '') === 'hematologia')
+                                    <button class="section-add-button" type="button" data-add-before-section>Agregar antes</button>
+                                @endif
                                 @if(in_array(($selectedExam['category_slug'] ?? ''), $sectionAddSlugs, true))
                                     <button class="section-add-button" type="button" data-add-after-section>Agregar aqui</button>
                                 @endif

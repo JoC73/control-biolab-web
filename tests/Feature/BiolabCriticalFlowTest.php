@@ -402,7 +402,9 @@ class BiolabCriticalFlowTest extends TestCase
             ->assertSee('data-section-row', false)
             ->assertSee('FORMULA DIFERENCIAL')
             ->assertSee('result-section-with-action', false)
+            ->assertSee('data-add-before-section', false)
             ->assertSee('data-add-after-section', false)
+            ->assertSee('Agregar antes')
             ->assertSee('Agregar aqui')
             ->assertSee('Etiqueta fija')
             ->assertSee('type="hidden" name="tests[5][name]" value="FORMULA DIFERENCIAL"', false);
@@ -414,6 +416,8 @@ class BiolabCriticalFlowTest extends TestCase
 
         $this->assertStringContainsString('isEmptyDataRow', $script);
         $this->assertStringContainsString('&& !isEmptyDataRow(cells, insertRow)', $script);
+        $this->assertStringContainsString('addRowBeforeSection', $script);
+        $this->assertStringContainsString('data-add-before-section', $script);
     }
 
     public function test_urine_section_labels_render_left_aligned(): void

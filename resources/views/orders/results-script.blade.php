@@ -71,11 +71,32 @@
             renameRows();
             focusRow(insertRow);
         };
+        const addRowBeforeSection = (button) => {
+            const cells = Array.from(table.querySelectorAll('.result-cell'));
+            const insertRow = Math.floor(cells.indexOf(button.closest('.result-cell')) / columns);
+            const fragment = buildRow(insertRow);
+            const referenceCell = cells[insertRow * columns] ?? null;
+
+            if (referenceCell) {
+                table.insertBefore(fragment, referenceCell);
+            } else {
+                table.appendChild(fragment);
+            }
+
+            renameRows();
+            focusRow(insertRow);
+        };
         document.querySelectorAll('[data-add-row]').forEach((button) => button.addEventListener('click', addRow));
         table.addEventListener('click', (event) => {
             const addAfterSectionButton = event.target.closest('[data-add-after-section]');
             if (addAfterSectionButton) {
                 addRowAfterSection(addAfterSectionButton);
+                return;
+            }
+
+            const addBeforeSectionButton = event.target.closest('[data-add-before-section]');
+            if (addBeforeSectionButton) {
+                addRowBeforeSection(addBeforeSectionButton);
                 return;
             }
 

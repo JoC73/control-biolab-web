@@ -81,6 +81,9 @@
                             <div class="result-cell result-section-label @if(in_array(($category['slug'] ?? ''), $leftSectionSlugs, true)) result-section-label-left @endif @if(in_array(($category['slug'] ?? ''), $sectionAddSlugs, true)) result-section-with-action @endif" data-section-row>
                                 <input type="hidden" name="tests[{{ $index }}][name]" value="{{ $test['name'] }}">
                                 <span>{{ $test['name'] }}</span>
+                                @if(($category['slug'] ?? '') === 'hematologia')
+                                    <button class="section-add-button" type="button" data-add-before-section>Agregar antes</button>
+                                @endif
                                 @if(in_array(($category['slug'] ?? ''), $sectionAddSlugs, true))
                                     <button class="section-add-button" type="button" data-add-after-section>Agregar aqui</button>
                                 @endif
@@ -212,6 +215,22 @@
                 focusRow(insertRow);
             };
 
+            const addRowBeforeSection = (button) => {
+                const cells = Array.from(table.querySelectorAll('.result-cell'));
+                const insertRow = Math.floor(cells.indexOf(button.closest('.result-cell')) / columns);
+                const fragment = buildRow(insertRow);
+                const referenceCell = cells[insertRow * columns] ?? null;
+
+                if (referenceCell) {
+                    table.insertBefore(fragment, referenceCell);
+                } else {
+                    table.appendChild(fragment);
+                }
+
+                renameRows();
+                focusRow(insertRow);
+            };
+
             const removeRow = (button) => {
                 if (rowCount() <= 1) {
                     return;
@@ -244,6 +263,13 @@
 
                 if (addAfterSectionButton) {
                     addRowAfterSection(addAfterSectionButton);
+                    return;
+                }
+
+                const addBeforeSectionButton = event.target.closest('[data-add-before-section]');
+
+                if (addBeforeSectionButton) {
+                    addRowBeforeSection(addBeforeSectionButton);
                 }
             });
         })();
