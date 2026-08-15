@@ -74,7 +74,7 @@
                             $isSection = filled($test['name'] ?? null) && blank($test['unit'] ?? null) && blank($test['reference'] ?? null) && blank($resultValue);
                         @endphp
                         @if ($isSection)
-                            <div class="result-cell result-section-label" data-section-row>
+                            <div class="result-cell result-section-label @if(($category['slug'] ?? '') === 'orina') result-section-label-left @endif" data-section-row>
                                 <input type="hidden" name="tests[{{ $index }}][name]" value="{{ $test['name'] }}">
                                 <span>{{ $test['name'] }}</span>
                             </div>

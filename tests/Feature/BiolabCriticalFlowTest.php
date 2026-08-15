@@ -405,6 +405,31 @@ class BiolabCriticalFlowTest extends TestCase
             ->assertSee('type="hidden" name="tests[5][name]" value="FORMULA DIFERENCIAL"', false);
     }
 
+    public function test_urine_section_labels_render_left_aligned(): void
+    {
+        app(CatalogStore::class)->savePrice('orina', 75);
+
+        $this->actingAsBiolab('recepcion')
+            ->post('/ordenes', $this->orderPayload([
+                'category_slug' => 'orina',
+                'exam_slugs' => ['orina'],
+                'exam_prices' => ['orina' => 75],
+                'price' => 75,
+                'paid_amount' => 75,
+            ]))
+            ->assertRedirect();
+
+        $order = app(OrderStore::class)->all()->first();
+
+        $this->actingAsBiolab('laboratorio')
+            ->get("/ordenes/{$order['id']}/resultados")
+            ->assertOk()
+            ->assertSee('result-section-label-left', false)
+            ->assertSee('EXAMEN FISICO')
+            ->assertDontSee('result-section-label result-section-label-left" data-section-row>
+                                <input type="hidden" name="tests[5][name]" value="FORMULA DIFERENCIAL"', false);
+    }
+
     public function test_multi_exam_order_uses_backend_prices_and_one_cash_movement(): void
     {
         $this->seedExamPrices();

@@ -137,6 +137,17 @@
             border-bottom: 0;
         }
 
+        .section-row-left td {
+            text-align: left;
+            padding-left: 7px;
+        }
+
+        .section-row-center td {
+            text-align: center;
+            border: 1px solid #26384c;
+            text-decoration: none;
+        }
+
         .exam-section {
             page-break-inside: auto;
             margin-bottom: 8px;
@@ -267,7 +278,7 @@
                             @forelse (($examItem['tests'] ?? []) as $index => $test)
                                 @php $isSection = blank($test['unit'] ?? null) && blank($test['reference'] ?? null) && blank($examItem['results'][$index] ?? null); @endphp
                                 @if ($isSection)
-                                    <tr class="section-row">
+                                    <tr class="section-row {{ ($examItem['category_slug'] ?? '') === 'orina' ? 'section-row-left' : 'section-row-center' }}">
                                         <td colspan="4">{{ $test['name'] }}</td>
                                     </tr>
                                 @else
@@ -340,7 +351,7 @@
                             @forelse (($examItem['tests'] ?? []) as $index => $test)
                                 @php $isSection = blank($test['unit'] ?? null) && blank($test['reference'] ?? null) && blank($examItem['results'][$index] ?? null); @endphp
                                 @if ($isSection)
-                                    <tr class="section-row">
+                                    <tr class="section-row {{ ($examItem['category_slug'] ?? '') === 'orina' ? 'section-row-left' : 'section-row-center' }}">
                                         <td colspan="4">{{ $test['name'] }}</td>
                                     </tr>
                                 @else
@@ -375,7 +386,7 @@
                     @forelse ($tests as $index => $test)
                         @php $isSection = blank($test['unit'] ?? null) && blank($test['reference'] ?? null) && blank($result['results'][$index] ?? null); @endphp
                         @if ($isSection)
-                            <tr class="section-row">
+                            <tr class="section-row {{ ($category['slug'] ?? '') === 'orina' ? 'section-row-left' : 'section-row-center' }}">
                                 <td colspan="4">{{ $test['name'] }}</td>
                             </tr>
                         @else

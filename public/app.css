@@ -1044,6 +1044,17 @@ small {
     background: #eef6f4;
 }
 
+.result-section-label-left {
+    justify-content: flex-start;
+    text-align: left;
+}
+
+.result-section-label-left span {
+    border: 0;
+    background: transparent;
+    text-decoration: underline;
+}
+
 .result-section-placeholder {
     display: none !important;
 }
