@@ -401,6 +401,9 @@ class BiolabCriticalFlowTest extends TestCase
             ->assertOk()
             ->assertSee('data-section-row', false)
             ->assertSee('FORMULA DIFERENCIAL')
+            ->assertSee('result-section-with-action', false)
+            ->assertSee('data-add-after-section', false)
+            ->assertSee('Agregar aqui')
             ->assertSee('Etiqueta fija')
             ->assertSee('type="hidden" name="tests[5][name]" value="FORMULA DIFERENCIAL"', false);
     }

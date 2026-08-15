@@ -20,7 +20,10 @@
 
         <form id="result-form" class="workbench" method="POST" action="{{ route('lab.results.preview', $category['slug']) }}">
             @csrf
-            @php $leftSectionSlugs = ['orina', 'heces']; @endphp
+            @php
+                $leftSectionSlugs = ['orina', 'heces'];
+                $sectionAddSlugs = ['hematologia', 'orina', 'heces'];
+            @endphp
 
             <section class="panel form-panel">
                 <div class="field span-2">
@@ -75,10 +78,10 @@
                             $isSection = filled($test['name'] ?? null) && blank($test['unit'] ?? null) && blank($test['reference'] ?? null) && blank($resultValue);
                         @endphp
                         @if ($isSection)
-                            <div class="result-cell result-section-label @if(in_array(($category['slug'] ?? ''), $leftSectionSlugs, true)) result-section-label-left @endif" data-section-row>
+                            <div class="result-cell result-section-label @if(in_array(($category['slug'] ?? ''), $leftSectionSlugs, true)) result-section-label-left @endif @if(in_array(($category['slug'] ?? ''), $sectionAddSlugs, true)) result-section-with-action @endif" data-section-row>
                                 <input type="hidden" name="tests[{{ $index }}][name]" value="{{ $test['name'] }}">
                                 <span>{{ $test['name'] }}</span>
-                                @if(in_array(($category['slug'] ?? ''), $leftSectionSlugs, true))
+                                @if(in_array(($category['slug'] ?? ''), $sectionAddSlugs, true))
                                     <button class="section-add-button" type="button" data-add-after-section>Agregar aqui</button>
                                 @endif
                             </div>

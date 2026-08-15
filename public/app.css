@@ -1044,12 +1044,22 @@ small {
     background: #eef6f4;
 }
 
+.result-section-with-action {
+    gap: 8px;
+}
+
+.result-section-with-action span {
+    flex: 1;
+    width: auto;
+}
+
 .result-section-label-left {
     justify-content: flex-start;
     text-align: left;
 }
 
 .result-section-label-left span {
+    flex: 0 1 auto;
     width: auto;
     border: 0;
     background: transparent;
