@@ -391,6 +391,20 @@ class BiolabCriticalFlowTest extends TestCase
         }
     }
 
+    public function test_required_exam_section_labels_render_as_locked_rows(): void
+    {
+        $this->createOrderAsReception(['price' => 75, 'paid_amount' => 75]);
+        $order = app(OrderStore::class)->all()->first();
+
+        $this->actingAsBiolab('laboratorio')
+            ->get("/ordenes/{$order['id']}/resultados")
+            ->assertOk()
+            ->assertSee('data-section-row', false)
+            ->assertSee('FORMULA DIFERENCIAL')
+            ->assertSee('Etiqueta fija')
+            ->assertSee('type="hidden" name="tests[5][name]" value="FORMULA DIFERENCIAL"', false);
+    }
+
     public function test_multi_exam_order_uses_backend_prices_and_one_cash_movement(): void
     {
         $this->seedExamPrices();

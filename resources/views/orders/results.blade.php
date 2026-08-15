@@ -46,11 +46,34 @@
                     @php $rows = max(count($selectedExam['tests']), 8); @endphp
                     @for ($index = 0; $index < $rows; $index++)
                         @php $test = $selectedExam['tests'][$index] ?? ['name' => '', 'unit' => '', 'reference' => '']; @endphp
-                        <div class="result-cell"><input name="tests[{{ $index }}][name]" value="{{ $test['name'] }}" placeholder="Analisis"></div>
-                        <div class="result-cell"><input name="results[{{ $index }}]" value="{{ $selectedExam['results'][$index] ?? '' }}" placeholder="Resultado"></div>
-                        <div class="result-cell"><input name="tests[{{ $index }}][unit]" value="{{ $test['unit'] }}" placeholder="Unidad"></div>
-                        <div class="result-cell"><input name="tests[{{ $index }}][reference]" value="{{ $test['reference'] }}" placeholder="Valor normal"></div>
-                        <div class="result-cell row-action"><button class="icon-button danger" type="button" data-remove-row>Eliminar</button></div>
+                        @php
+                            $resultValue = $selectedExam['results'][$index] ?? '';
+                            $isSection = filled($test['name'] ?? null) && blank($test['unit'] ?? null) && blank($test['reference'] ?? null) && blank($resultValue);
+                        @endphp
+                        @if ($isSection)
+                            <div class="result-cell result-section-label" data-section-row>
+                                <input type="hidden" name="tests[{{ $index }}][name]" value="{{ $test['name'] }}">
+                                <span>{{ $test['name'] }}</span>
+                            </div>
+                            <div class="result-cell result-section-placeholder">
+                                <input type="hidden" name="results[{{ $index }}]" value="">
+                            </div>
+                            <div class="result-cell result-section-placeholder">
+                                <input type="hidden" name="tests[{{ $index }}][unit]" value="">
+                            </div>
+                            <div class="result-cell result-section-placeholder">
+                                <input type="hidden" name="tests[{{ $index }}][reference]" value="">
+                            </div>
+                            <div class="result-cell row-action result-section-placeholder">
+                                <span class="locked-label">Etiqueta fija</span>
+                            </div>
+                        @else
+                            <div class="result-cell"><input name="tests[{{ $index }}][name]" value="{{ $test['name'] }}" placeholder="Analisis"></div>
+                            <div class="result-cell"><input name="results[{{ $index }}]" value="{{ $resultValue }}" placeholder="Resultado"></div>
+                            <div class="result-cell"><input name="tests[{{ $index }}][unit]" value="{{ $test['unit'] }}" placeholder="Unidad"></div>
+                            <div class="result-cell"><input name="tests[{{ $index }}][reference]" value="{{ $test['reference'] }}" placeholder="Valor normal"></div>
+                            <div class="result-cell row-action"><button class="icon-button danger" type="button" data-remove-row>Eliminar</button></div>
+                        @endif
                     @endfor
                 </div>
                 <div class="actions">
