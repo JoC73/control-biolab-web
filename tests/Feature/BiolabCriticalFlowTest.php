@@ -433,6 +433,33 @@ class BiolabCriticalFlowTest extends TestCase
         $this->assertContains('CAMPO PERSISTENTE QA', collect($updatedHematology['tests'])->pluck('name')->all());
     }
 
+    public function test_template_save_buttons_bypass_patient_required_fields(): void
+    {
+        $this->actingAsBiolab('laboratorio')
+            ->get('/resultados/hematologia/nuevo')
+            ->assertOk()
+            ->assertSee('formaction="http://localhost/resultados/hematologia/plantilla" formnovalidate', false);
+
+        $this->createOrderAsReception(['price' => 75, 'paid_amount' => 75, 'phone' => '']);
+        $order = app(OrderStore::class)->all()->first();
+
+        $this->actingAsBiolab('laboratorio')
+            ->get("/ordenes/{$order['id']}/resultados")
+            ->assertOk()
+            ->assertSee('formaction="http://localhost/ordenes/'.$order['id'].'/plantilla" formnovalidate', false);
+    }
+
+    public function test_phone_is_optional_when_creating_order(): void
+    {
+        $this->actingAsBiolab('recepcion')
+            ->post('/ordenes', $this->orderPayload(['phone' => '']))
+            ->assertRedirect();
+
+        $order = app(OrderStore::class)->all()->first();
+
+        $this->assertSame('', $order['phone']);
+    }
+
     public function test_saving_result_does_not_update_exam_template_without_template_button(): void
     {
         $this->createOrderAsReception(['price' => 75, 'paid_amount' => 75]);
