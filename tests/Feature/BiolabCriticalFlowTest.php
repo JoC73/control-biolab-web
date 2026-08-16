@@ -153,6 +153,18 @@ class BiolabCriticalFlowTest extends TestCase
         $this->assertEqualsWithDelta(60.0, app(CashStore::class)->totals('2026-07-10')['balance'], 0.001);
     }
 
+    public function test_cash_screen_shows_explicit_expense_form_fields(): void
+    {
+        $this->actingAsBiolab('caja')
+            ->get('/caja')
+            ->assertOk()
+            ->assertSee('Registrar egreso')
+            ->assertSee('name="type" value="expense"', false)
+            ->assertSee('Monto / cantidad')
+            ->assertSee('Descripcion')
+            ->assertSee('Guardar egreso');
+    }
+
     public function test_cash_history_filters_by_day_week_month_and_year(): void
     {
         $this->actingAsBiolab('caja');
@@ -626,7 +638,7 @@ class BiolabCriticalFlowTest extends TestCase
         ])->render();
 
         $this->assertDoesNotMatchRegularExpression('/section-row[^>]*>\s*<td colspan="4">RECUENTO DE PLAQUETAS/s', $html);
-        $this->assertMatchesRegularExpression('/section-row section-row-center[^>]*>\s*<td colspan="4">FORMULA DIFERENCIAL/s', $html);
+        $this->assertMatchesRegularExpression('/section-row section-row-center[^>]*>\s*<td colspan="4"><strong>FORMULA DIFERENCIAL<\/strong>/s', $html);
         $this->assertDoesNotMatchRegularExpression('/section-row[^>]*>\s*<td colspan="4">SEGMENTADOS/s', $html);
     }
 

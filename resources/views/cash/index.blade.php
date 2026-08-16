@@ -69,7 +69,7 @@
                 <div class="section-heading">
                     <div>
                         <p class="eyebrow">Nuevo movimiento</p>
-                        <h2>Registrar ingreso o egreso</h2>
+                        <h2>Registrar egreso o ingreso</h2>
                         <p>El sistema usa la fecha indicada y bloquea egresos mayores al saldo disponible de ese dia.</p>
                     </div>
                     <span class="soft-badge">Disponible del dia Q {{ number_format($dailyTotals['balance'], 2) }}</span>
@@ -81,15 +81,35 @@
                         @endforeach
                     </div>
                 @endif
-                <form class="cash-entry-form" method="POST" action="{{ route('cash.store') }}">
-                    @csrf
-                    <div class="field"><label>Tipo</label><select name="type"><option value="income" @selected(old('type')==='income')>Ingreso</option><option value="expense" @selected(old('type')==='expense')>Egreso</option></select></div>
-                    <div class="field"><label>Fecha</label><input name="date" type="date" value="{{ old('date', $filters['date']) }}" required></div>
-                    <div class="field"><label>Monto / cantidad</label><input name="amount" type="number" min="0.01" step="0.01" value="{{ old('amount') }}" placeholder="0.00" required></div>
-                    <div class="field"><label>Metodo</label><select name="method"><option value="efectivo" @selected(old('method')==='efectivo')>Efectivo</option><option value="transferencia" @selected(old('method')==='transferencia')>Transferencia</option><option value="tarjeta" @selected(old('method')==='tarjeta')>Tarjeta</option></select></div>
-                    <div class="field span-3"><label>Descripcion</label><input name="description" value="{{ old('description') }}" placeholder="Ej. compra de insumos, pago de servicio, ajuste de caja" required></div>
-                    <div class="filter-actions"><button class="button primary" type="submit">Guardar movimiento</button></div>
-                </form>
+                <div class="cash-entry-split">
+                    <form class="cash-entry-card expense-entry-card" method="POST" action="{{ route('cash.store') }}">
+                        @csrf
+                        <input type="hidden" name="type" value="expense">
+                        <div>
+                            <p class="eyebrow">Egreso</p>
+                            <h3>Registrar egreso</h3>
+                        </div>
+                        <div class="field"><label>Fecha del egreso</label><input name="date" type="date" value="{{ old('type') === 'expense' ? old('date', $filters['date']) : $filters['date'] }}" required></div>
+                        <div class="field"><label>Monto / cantidad</label><input name="amount" type="number" min="0.01" step="0.01" value="{{ old('type') === 'expense' ? old('amount') : '' }}" placeholder="0.00" required></div>
+                        <div class="field"><label>Metodo</label><select name="method"><option value="efectivo" @selected(old('type') === 'expense' && old('method')==='efectivo')>Efectivo</option><option value="transferencia" @selected(old('type') === 'expense' && old('method')==='transferencia')>Transferencia</option><option value="tarjeta" @selected(old('type') === 'expense' && old('method')==='tarjeta')>Tarjeta</option></select></div>
+                        <div class="field"><label>Descripcion</label><input name="description" value="{{ old('type') === 'expense' ? old('description') : '' }}" placeholder="Ej. compra de reactivos, insumos o servicio" required></div>
+                        <button class="button danger-button" type="submit">Guardar egreso</button>
+                    </form>
+
+                    <form class="cash-entry-card income-entry-card" method="POST" action="{{ route('cash.store') }}">
+                        @csrf
+                        <input type="hidden" name="type" value="income">
+                        <div>
+                            <p class="eyebrow">Ingreso</p>
+                            <h3>Registrar ingreso</h3>
+                        </div>
+                        <div class="field"><label>Fecha del ingreso</label><input name="date" type="date" value="{{ old('type') === 'income' ? old('date', $filters['date']) : $filters['date'] }}" required></div>
+                        <div class="field"><label>Monto / cantidad</label><input name="amount" type="number" min="0.01" step="0.01" value="{{ old('type') === 'income' ? old('amount') : '' }}" placeholder="0.00" required></div>
+                        <div class="field"><label>Metodo</label><select name="method"><option value="efectivo" @selected(old('type') === 'income' && old('method')==='efectivo')>Efectivo</option><option value="transferencia" @selected(old('type') === 'income' && old('method')==='transferencia')>Transferencia</option><option value="tarjeta" @selected(old('type') === 'income' && old('method')==='tarjeta')>Tarjeta</option></select></div>
+                        <div class="field"><label>Descripcion</label><input name="description" value="{{ old('type') === 'income' ? old('description') : '' }}" placeholder="Ej. ingreso manual de caja" required></div>
+                        <button class="button primary" type="submit">Guardar ingreso</button>
+                    </form>
+                </div>
             </section>
         @endif
         <section class="panel cash-ledger-panel">

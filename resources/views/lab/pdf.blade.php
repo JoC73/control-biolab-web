@@ -297,7 +297,7 @@
                                 @php $isSection = $isSectionRow($test, $examItem['results'][$index] ?? null, $examItem['category_slug'] ?? ''); @endphp
                                 @if ($isSection)
                                     <tr class="section-row {{ in_array(($examItem['category_slug'] ?? ''), ['orina', 'heces'], true) ? 'section-row-left' : 'section-row-center' }}">
-                                        <td colspan="4">{{ $test['name'] }}</td>
+                                        <td colspan="4"><strong>{{ $test['name'] }}</strong></td>
                                     </tr>
                                 @else
                                     <tr>
@@ -370,7 +370,7 @@
                                 @php $isSection = $isSectionRow($test, $examItem['results'][$index] ?? null, $examItem['category_slug'] ?? ''); @endphp
                                 @if ($isSection)
                                     <tr class="section-row {{ in_array(($examItem['category_slug'] ?? ''), ['orina', 'heces'], true) ? 'section-row-left' : 'section-row-center' }}">
-                                        <td colspan="4">{{ $test['name'] }}</td>
+                                        <td colspan="4"><strong>{{ $test['name'] }}</strong></td>
                                     </tr>
                                 @else
                                     <tr>
@@ -405,7 +405,7 @@
                         @php $isSection = $isSectionRow($test, $result['results'][$index] ?? null, $category['slug'] ?? ''); @endphp
                         @if ($isSection)
                             <tr class="section-row {{ in_array(($category['slug'] ?? ''), ['orina', 'heces'], true) ? 'section-row-left' : 'section-row-center' }}">
-                                <td colspan="4">{{ $test['name'] }}</td>
+                                <td colspan="4"><strong>{{ $test['name'] }}</strong></td>
                             </tr>
                         @else
                             <tr>
