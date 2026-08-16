@@ -25,6 +25,11 @@
             @php
                 $leftSectionSlugs = ['orina', 'heces'];
                 $sectionAddSlugs = ['hematologia', 'orina', 'heces'];
+                $sectionNamesBySlug = [
+                    'hematologia' => ['FORMULA DIFERENCIAL'],
+                    'orina' => ['EXAMEN FISICO', 'EXAMEN QUIMICO', 'EXAMEN MICROSCOPICO'],
+                    'heces' => ['EXAMEN MACROSCOPICO', 'EXAMEN MICROSCOPICO', 'PARASITOS', 'HUEVOS', 'QUISTES', 'TROFOZOITOS', 'OTROS:'],
+                ];
             @endphp
 
             <section class="panel form-panel">
@@ -77,7 +82,8 @@
                         @php
                             $test = $baseTests[$index] ?? ['name' => '', 'unit' => '', 'reference' => ''];
                             $resultValue = old('results.'.$index, $baseResults[$index] ?? '');
-                            $isSection = filled($test['name'] ?? null) && blank($test['unit'] ?? null) && blank($test['reference'] ?? null) && blank($resultValue);
+                            $sectionNames = $sectionNamesBySlug[$category['slug'] ?? ''] ?? [];
+                            $isSection = in_array(mb_strtoupper(trim($test['name'] ?? ''), 'UTF-8'), $sectionNames, true) && blank($test['unit'] ?? null) && blank($test['reference'] ?? null) && blank($resultValue);
                         @endphp
                         @if ($isSection)
                             <div class="result-cell result-section-label @if(in_array(($category['slug'] ?? ''), $leftSectionSlugs, true)) result-section-label-left @endif @if(in_array(($category['slug'] ?? ''), $sectionAddSlugs, true)) result-section-with-action @endif" data-section-row>

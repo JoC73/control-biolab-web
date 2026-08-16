@@ -516,6 +516,56 @@ class BiolabCriticalFlowTest extends TestCase
             ->assertSee('type="hidden" name="tests[5][name]" value="FORMULA DIFERENCIAL"', false);
     }
 
+    public function test_blank_custom_hematology_fields_remain_editable_not_section_labels(): void
+    {
+        app(CatalogStore::class)->saveExamFields('hematologia', [
+            ['name' => 'RECUENTO DE GLOBULOS BLANCOS', 'unit' => 'Cel/mm3', 'reference' => '5000-10000'],
+            ['name' => 'RECUENTO DE PLAQUETAS', 'unit' => '', 'reference' => ''],
+            ['name' => 'FORMULA DIFERENCIAL', 'unit' => '', 'reference' => ''],
+            ['name' => 'SEGMENTADOS', 'unit' => '', 'reference' => ''],
+        ]);
+
+        $this->createOrderAsReception(['price' => 75, 'paid_amount' => 75]);
+        $order = app(OrderStore::class)->all()->first();
+
+        $response = $this->actingAsBiolab('laboratorio')
+            ->get("/ordenes/{$order['id']}/resultados")
+            ->assertOk()
+            ->assertSee('value="RECUENTO DE PLAQUETAS"', false)
+            ->assertSee('value="SEGMENTADOS"', false)
+            ->assertSee('type="hidden" name="tests[2][name]" value="FORMULA DIFERENCIAL"', false);
+
+        $html = $response->baseResponse->getContent();
+
+        $this->assertStringNotContainsString('type="hidden" name="tests[1][name]" value="RECUENTO DE PLAQUETAS"', $html);
+        $this->assertStringNotContainsString('type="hidden" name="tests[3][name]" value="SEGMENTADOS"', $html);
+    }
+
+    public function test_pdf_only_renders_known_section_labels_as_section_rows(): void
+    {
+        $html = view('orders.pdf', [
+            'business' => config('lab.business'),
+            'order' => $this->orderPayload(['id' => 'QA-PDF']),
+            'examItems' => [[
+                'category_slug' => 'hematologia',
+                'category_title' => 'HEMATOLOGIA COMPLETA',
+                'status' => 'ready',
+                'tests' => [
+                    ['name' => 'RECUENTO DE PLAQUETAS', 'unit' => '', 'reference' => ''],
+                    ['name' => 'FORMULA DIFERENCIAL', 'unit' => '', 'reference' => ''],
+                    ['name' => 'SEGMENTADOS', 'unit' => '', 'reference' => ''],
+                ],
+                'results' => ['', '', ''],
+            ]],
+            'logoDataUri' => '',
+            'signatureDataUri' => '',
+        ])->render();
+
+        $this->assertDoesNotMatchRegularExpression('/section-row[^>]*>\s*<td colspan="4">RECUENTO DE PLAQUETAS/s', $html);
+        $this->assertMatchesRegularExpression('/section-row[^>]*>\s*<td colspan="4">FORMULA DIFERENCIAL/s', $html);
+        $this->assertDoesNotMatchRegularExpression('/section-row[^>]*>\s*<td colspan="4">SEGMENTADOS/s', $html);
+    }
+
     public function test_section_add_script_stops_before_empty_rows(): void
     {
         $script = file_get_contents(resource_path('views/orders/results-script.blade.php'));

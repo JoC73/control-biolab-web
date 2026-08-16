@@ -228,6 +228,17 @@
             ->filter(fn (array $examItem) => ($examItem['status'] ?? 'ready') === 'ready')
             ->values();
         $isGroupedPdf = ($groupedPdf ?? false) && $readyExamItems->count() > 1;
+        $sectionNamesBySlug = [
+            'hematologia' => ['FORMULA DIFERENCIAL'],
+            'orina' => ['EXAMEN FISICO', 'EXAMEN QUIMICO', 'EXAMEN MICROSCOPICO'],
+            'heces' => ['EXAMEN MACROSCOPICO', 'EXAMEN MICROSCOPICO', 'PARASITOS', 'HUEVOS', 'QUISTES', 'TROFOZOITOS', 'OTROS:'],
+        ];
+        $isSectionRow = function (array $test, mixed $result, string $slug) use ($sectionNamesBySlug): bool {
+            return in_array(mb_strtoupper(trim($test['name'] ?? ''), 'UTF-8'), $sectionNamesBySlug[$slug] ?? [], true)
+                && blank($test['unit'] ?? null)
+                && blank($test['reference'] ?? null)
+                && blank($result);
+        };
     @endphp
 
     @if ($isGroupedPdf)
@@ -280,7 +291,7 @@
                         </thead>
                         <tbody>
                             @forelse (($examItem['tests'] ?? []) as $index => $test)
-                                @php $isSection = blank($test['unit'] ?? null) && blank($test['reference'] ?? null) && blank($examItem['results'][$index] ?? null); @endphp
+                                @php $isSection = $isSectionRow($test, $examItem['results'][$index] ?? null, $examItem['category_slug'] ?? ''); @endphp
                                 @if ($isSection)
                                     <tr class="section-row {{ in_array(($examItem['category_slug'] ?? ''), ['orina', 'heces'], true) ? 'section-row-left' : 'section-row-center' }}">
                                         <td colspan="4">{{ $test['name'] }}</td>
@@ -353,7 +364,7 @@
                         </thead>
                         <tbody>
                             @forelse (($examItem['tests'] ?? []) as $index => $test)
-                                @php $isSection = blank($test['unit'] ?? null) && blank($test['reference'] ?? null) && blank($examItem['results'][$index] ?? null); @endphp
+                                @php $isSection = $isSectionRow($test, $examItem['results'][$index] ?? null, $examItem['category_slug'] ?? ''); @endphp
                                 @if ($isSection)
                                     <tr class="section-row {{ in_array(($examItem['category_slug'] ?? ''), ['orina', 'heces'], true) ? 'section-row-left' : 'section-row-center' }}">
                                         <td colspan="4">{{ $test['name'] }}</td>
@@ -388,7 +399,7 @@
                 </thead>
                 <tbody>
                     @forelse ($tests as $index => $test)
-                        @php $isSection = blank($test['unit'] ?? null) && blank($test['reference'] ?? null) && blank($result['results'][$index] ?? null); @endphp
+                        @php $isSection = $isSectionRow($test, $result['results'][$index] ?? null, $category['slug'] ?? ''); @endphp
                         @if ($isSection)
                             <tr class="section-row {{ in_array(($category['slug'] ?? ''), ['orina', 'heces'], true) ? 'section-row-left' : 'section-row-center' }}">
                                 <td colspan="4">{{ $test['name'] }}</td>
