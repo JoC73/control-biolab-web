@@ -547,7 +547,7 @@ class BiolabCriticalFlowTest extends TestCase
             'business' => config('lab.business'),
             'order' => $this->orderPayload(['id' => 'QA-PDF']),
             'examItems' => [[
-                'category_slug' => 'hematologia',
+                'category_slug' => '',
                 'category_title' => 'HEMATOLOGIA COMPLETA',
                 'status' => 'ready',
                 'tests' => [
@@ -562,7 +562,7 @@ class BiolabCriticalFlowTest extends TestCase
         ])->render();
 
         $this->assertDoesNotMatchRegularExpression('/section-row[^>]*>\s*<td colspan="4">RECUENTO DE PLAQUETAS/s', $html);
-        $this->assertMatchesRegularExpression('/section-row[^>]*>\s*<td colspan="4">FORMULA DIFERENCIAL/s', $html);
+        $this->assertMatchesRegularExpression('/section-row section-row-center[^>]*>\s*<td colspan="4">FORMULA DIFERENCIAL/s', $html);
         $this->assertDoesNotMatchRegularExpression('/section-row[^>]*>\s*<td colspan="4">SEGMENTADOS/s', $html);
     }
 

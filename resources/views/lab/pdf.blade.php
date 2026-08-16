@@ -148,6 +148,7 @@
 
         .section-row-center td {
             text-align: center;
+            font-weight: 800;
             border: 1px solid #26384c;
             text-decoration: none;
         }
@@ -234,7 +235,9 @@
             'heces' => ['EXAMEN MACROSCOPICO', 'EXAMEN MICROSCOPICO', 'PARASITOS', 'HUEVOS', 'QUISTES', 'TROFOZOITOS', 'OTROS:'],
         ];
         $isSectionRow = function (array $test, mixed $result, string $slug) use ($sectionNamesBySlug): bool {
-            return in_array(mb_strtoupper(trim($test['name'] ?? ''), 'UTF-8'), $sectionNamesBySlug[$slug] ?? [], true)
+            $name = mb_strtoupper(trim($test['name'] ?? ''), 'UTF-8');
+
+            return (in_array($name, $sectionNamesBySlug[$slug] ?? [], true) || $name === 'FORMULA DIFERENCIAL')
                 && blank($test['unit'] ?? null)
                 && blank($test['reference'] ?? null)
                 && blank($result);
