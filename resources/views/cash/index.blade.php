@@ -42,29 +42,53 @@
         </section>
 
         <section class="summary-grid">
-            <article><span>Q {{ number_format($totals['income'], 2) }}</span><p>Ingresos validos</p></article>
-            <article><span>Q {{ number_format($totals['expense'], 2) }}</span><p>Egresos validos</p></article>
-            <article><span>Q {{ number_format($totals['balance'], 2) }}</span><p>Saldo del dia</p></article>
+            <article><span>Q {{ number_format($totals['income'], 2) }}</span><p>Ingresos validos del periodo</p></article>
+            <article><span>Q {{ number_format($totals['expense'], 2) }}</span><p>Egresos validos del periodo</p></article>
+            <article><span>Q {{ number_format($totals['balance'], 2) }}</span><p>Saldo del periodo</p></article>
         </section>
         <section class="panel">
             <form class="filters" method="GET" action="{{ route('cash.index') }}">
-                <input type="hidden" name="month" value="{{ $filters['month'] }}">
-                <div class="field"><label>Fecha</label><input name="date" type="date" value="{{ $filters['date'] }}"></div>
+                <div class="field">
+                    <label>Periodo</label>
+                    <select name="period">
+                        <option value="day" @selected($filters['period']==='day')>Dia</option>
+                        <option value="week" @selected($filters['period']==='week')>Semana</option>
+                        <option value="month" @selected($filters['period']==='month')>Mes</option>
+                        <option value="year" @selected($filters['period']==='year')>Año</option>
+                    </select>
+                </div>
+                <div class="field"><label>Fecha base</label><input name="date" type="date" value="{{ $filters['date'] }}"></div>
+                <div class="field"><label>Mes</label><input name="month" type="month" value="{{ $filters['month'] }}"></div>
                 <div class="field"><label>Tipo</label><select name="type"><option value="">Todos</option><option value="income" @selected($filters['type']==='income')>Ingreso</option><option value="expense" @selected($filters['type']==='expense')>Egreso</option></select></div>
                 <div class="filter-actions"><button class="button primary" type="submit">Filtrar</button><a class="button" href="{{ route('cash.index') }}">Hoy</a></div>
             </form>
+            <p class="period-note">Mostrando movimientos del {{ \Illuminate\Support\Carbon::parse($filters['date_from'])->format('d/m/Y') }} al {{ \Illuminate\Support\Carbon::parse($filters['date_to'])->format('d/m/Y') }}.</p>
         </section>
         @if ($auth->hasPermission('cash.manage'))
-            <section class="panel">
-                <div class="section-heading"><div><p class="eyebrow">Nuevo movimiento</p><h2>Registrar ingreso o egreso</h2></div></div>
-                <form class="filters" method="POST" action="{{ route('cash.store') }}">
+            <section class="panel cash-entry-panel">
+                <div class="section-heading">
+                    <div>
+                        <p class="eyebrow">Nuevo movimiento</p>
+                        <h2>Registrar ingreso o egreso</h2>
+                        <p>El sistema usa la fecha indicada y bloquea egresos mayores al saldo disponible de ese dia.</p>
+                    </div>
+                    <span class="soft-badge">Disponible del dia Q {{ number_format($dailyTotals['balance'], 2) }}</span>
+                </div>
+                @if ($errors->any())
+                    <div class="form-errors">
+                        @foreach ($errors->all() as $error)
+                            <p>{{ $error }}</p>
+                        @endforeach
+                    </div>
+                @endif
+                <form class="cash-entry-form" method="POST" action="{{ route('cash.store') }}">
                     @csrf
-                    <div class="field"><label>Tipo</label><select name="type"><option value="income">Ingreso</option><option value="expense">Egreso</option></select></div>
-                    <div class="field"><label>Fecha</label><input name="date" type="date" value="{{ $filters['date'] }}" required></div>
-                    <div class="field"><label>Monto</label><input name="amount" type="number" min="0.01" step="0.01" required></div>
-                    <div class="field"><label>Metodo</label><select name="method"><option value="efectivo">Efectivo</option><option value="transferencia">Transferencia</option><option value="tarjeta">Tarjeta</option></select></div>
-                    <div class="field span-2"><label>Descripcion</label><input name="description" required></div>
-                    <div class="filter-actions"><button class="button primary" type="submit">Guardar</button></div>
+                    <div class="field"><label>Tipo</label><select name="type"><option value="income" @selected(old('type')==='income')>Ingreso</option><option value="expense" @selected(old('type')==='expense')>Egreso</option></select></div>
+                    <div class="field"><label>Fecha</label><input name="date" type="date" value="{{ old('date', $filters['date']) }}" required></div>
+                    <div class="field"><label>Monto / cantidad</label><input name="amount" type="number" min="0.01" step="0.01" value="{{ old('amount') }}" placeholder="0.00" required></div>
+                    <div class="field"><label>Metodo</label><select name="method"><option value="efectivo" @selected(old('method')==='efectivo')>Efectivo</option><option value="transferencia" @selected(old('method')==='transferencia')>Transferencia</option><option value="tarjeta" @selected(old('method')==='tarjeta')>Tarjeta</option></select></div>
+                    <div class="field span-3"><label>Descripcion</label><input name="description" value="{{ old('description') }}" placeholder="Ej. compra de insumos, pago de servicio, ajuste de caja" required></div>
+                    <div class="filter-actions"><button class="button primary" type="submit">Guardar movimiento</button></div>
                 </form>
             </section>
         @endif

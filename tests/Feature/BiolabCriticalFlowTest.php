@@ -120,6 +120,70 @@ class BiolabCriticalFlowTest extends TestCase
             ->assertSee('Q 75.00');
     }
 
+    public function test_cash_expense_cannot_exceed_available_daily_balance(): void
+    {
+        $this->actingAsBiolab('caja');
+
+        app(CashStore::class)->create([
+            'type' => 'income',
+            'date' => '2026-07-10',
+            'amount' => 100,
+            'method' => 'efectivo',
+            'description' => 'Ingreso base',
+        ]);
+
+        $this->post('/caja', [
+            'type' => 'expense',
+            'date' => '2026-07-10',
+            'amount' => 125,
+            'method' => 'efectivo',
+            'description' => 'Compra mayor al saldo',
+        ])->assertSessionHasErrors('amount');
+
+        $this->assertEqualsWithDelta(100.0, app(CashStore::class)->totals('2026-07-10')['balance'], 0.001);
+
+        $this->post('/caja', [
+            'type' => 'expense',
+            'date' => '2026-07-10',
+            'amount' => 40,
+            'method' => 'efectivo',
+            'description' => 'Compra valida',
+        ])->assertRedirect();
+
+        $this->assertEqualsWithDelta(60.0, app(CashStore::class)->totals('2026-07-10')['balance'], 0.001);
+    }
+
+    public function test_cash_history_filters_by_day_week_month_and_year(): void
+    {
+        $this->actingAsBiolab('caja');
+
+        $cash = app(CashStore::class);
+        $cash->create(['type' => 'income', 'date' => '2026-07-06', 'amount' => 10, 'method' => 'efectivo', 'description' => 'Ingreso semana']);
+        $cash->create(['type' => 'expense', 'date' => '2026-07-08', 'amount' => 5, 'method' => 'efectivo', 'description' => 'Egreso semana']);
+        $cash->create(['type' => 'income', 'date' => '2026-07-20', 'amount' => 80, 'method' => 'efectivo', 'description' => 'Ingreso mes']);
+        $cash->create(['type' => 'income', 'date' => '2026-11-15', 'amount' => 200, 'method' => 'efectivo', 'description' => 'Ingreso año']);
+
+        $this->get('/caja?period=day&date=2026-07-08')
+            ->assertOk()
+            ->assertSee('Egreso semana')
+            ->assertDontSee('Ingreso semana');
+
+        $this->get('/caja?period=week&date=2026-07-08')
+            ->assertOk()
+            ->assertSee('Ingreso semana')
+            ->assertSee('Egreso semana')
+            ->assertDontSee('Ingreso mes');
+
+        $this->get('/caja?period=month&month=2026-07&date=2026-07-08')
+            ->assertOk()
+            ->assertSee('Ingreso mes')
+            ->assertDontSee('Ingreso año');
+
+        $this->get('/caja?period=year&date=2026-07-08')
+            ->assertOk()
+            ->assertSee('Ingreso año');
+    }
+
     public function test_initial_payment_cannot_exceed_net_total(): void
     {
         $this->actingAsBiolab('recepcion')

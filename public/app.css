@@ -806,13 +806,13 @@ button,
     display: inline-flex;
     align-items: center;
     flex: 0 0 auto;
-    min-height: 26px;
-    padding: 0 8px;
+    min-height: 22px;
+    padding: 0 7px;
     border: 1px solid var(--line);
     border-radius: 999px;
     background: #f8fafc;
     color: #526173;
-    font-size: .75rem;
+    font-size: .68rem;
     font-weight: 900;
 }
 
@@ -1561,13 +1561,13 @@ small {
     display: inline-flex;
     align-items: center;
     flex: 0 0 auto;
-    min-height: 24px;
-    padding: 0 8px;
+    min-height: 22px;
+    padding: 0 7px;
     border: 1px solid var(--line);
     border-radius: 999px;
     background: #f8fafc;
     color: #526173;
-    font-size: .75rem;
+    font-size: .68rem;
     font-weight: 900;
     text-transform: uppercase;
 }
@@ -1710,6 +1710,44 @@ button:disabled,
 
 .month-filter label {
     margin-left: 0;
+}
+
+.period-note {
+    margin: 10px 0 0;
+    color: var(--muted);
+    font-size: .9rem;
+}
+
+.cash-entry-panel .section-heading p:not(.eyebrow) {
+    margin: 4px 0 0;
+    color: var(--muted);
+}
+
+.cash-entry-form {
+    display: grid;
+    grid-template-columns: 180px 180px 180px 180px minmax(260px, 1fr) auto;
+    gap: 12px;
+    align-items: end;
+}
+
+.cash-entry-form .span-3 {
+    grid-column: span 2;
+}
+
+.form-errors {
+    display: grid;
+    gap: 4px;
+    margin-bottom: 12px;
+    padding: 10px 12px;
+    border: 1px solid #efb4ac;
+    border-radius: 8px;
+    background: #fff8f7;
+    color: #9f1d13;
+    font-weight: 800;
+}
+
+.form-errors p {
+    margin: 0;
 }
 
 .user-permission-list {
@@ -1907,9 +1945,14 @@ button:disabled,
     .catalog-board,
     .exam-builder-head,
     .exam-picker-toolbar,
+    .cash-entry-form,
     .month-filter,
     .monthly-summary-grid {
         grid-template-columns: 1fr;
+    }
+
+    .cash-entry-form .span-3 {
+        grid-column: auto;
     }
 
     .exam-summary-pills {

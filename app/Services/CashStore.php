@@ -17,6 +17,14 @@ class CashStore extends JsonStore
                 $query->where('date', $filters['date']);
             }
 
+            if ($filters['date_from'] ?? null) {
+                $query->where('date', '>=', $filters['date_from']);
+            }
+
+            if ($filters['date_to'] ?? null) {
+                $query->where('date', '<=', $filters['date_to']);
+            }
+
             if ($filters['type'] ?? null) {
                 $query->where('type', $filters['type']);
             }
@@ -27,6 +35,8 @@ class CashStore extends JsonStore
         return $this->all()
             ->sortByDesc('created_at')
             ->when($filters['date'] ?? null, fn (Collection $rows, string $date) => $rows->where('date', $date))
+            ->when($filters['date_from'] ?? null, fn (Collection $rows, string $date) => $rows->where('date', '>=', $date))
+            ->when($filters['date_to'] ?? null, fn (Collection $rows, string $date) => $rows->where('date', '<=', $date))
             ->when($filters['type'] ?? null, fn (Collection $rows, string $type) => $rows->where('type', $type))
             ->values();
     }
@@ -64,6 +74,28 @@ class CashStore extends JsonStore
 
         return [
             'month' => $month,
+            'income' => $income,
+            'expense' => $expense,
+            'balance' => $income - $expense,
+            'income_count' => $incomeRows->count(),
+            'expense_count' => $expenseRows->count(),
+            'voided_count' => $rows->where('status', 'voided')->count(),
+        ];
+    }
+
+    public function periodTotals(string $dateFrom, string $dateTo): array
+    {
+        $rows = $this->search(['date_from' => $dateFrom, 'date_to' => $dateTo]);
+        $valid = $rows->where('status', 'active');
+        $incomeRows = $valid->where('type', 'income');
+        $expenseRows = $valid->where('type', 'expense');
+
+        $income = (float) $incomeRows->sum('amount');
+        $expense = (float) $expenseRows->sum('amount');
+
+        return [
+            'date_from' => $dateFrom,
+            'date_to' => $dateTo,
             'income' => $income,
             'expense' => $expense,
             'balance' => $income - $expense,
