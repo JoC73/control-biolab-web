@@ -42,14 +42,14 @@ class AuthStore
     public const ROLE_PERMISSIONS = [
         'admin' => ['*'],
         'recepcion' => ['orders.view', 'orders.create', 'orders.deliver', 'payments.create', 'cash.view', 'catalogs.view', 'catalogs.references', 'results.view', 'results.print'],
-        'laboratorio' => ['orders.view', 'laboratory.view', 'results.view', 'results.create', 'results.edit', 'results.print', 'catalogs.view', 'catalogs.manage'],
+        'laboratorio' => ['orders.view', 'cash.view', 'laboratory.view', 'results.view', 'results.create', 'results.edit', 'results.print', 'catalogs.view', 'catalogs.manage'],
         'caja' => ['orders.view', 'orders.create', 'orders.cancel', 'payments.create', 'cash.view', 'cash.manage', 'catalogs.view', 'catalogs.prices'],
     ];
 
     public const PERMISSIONS = [
         'admin' => ['Administracion total', 'Usuarios y permisos', 'Auditoria', 'Catalogos', 'Caja', 'Laboratorio', 'Resultados'],
         'recepcion' => ['Registrar cobros', 'Consultar ordenes', 'Caja basica', 'Entregar resultados', 'Catalogos de referencia'],
-        'laboratorio' => ['Cola de laboratorio', 'Llenar resultados', 'Editar resultados', 'Generar PDF'],
+        'laboratorio' => ['Cola de laboratorio', 'Llenar resultados', 'Editar resultados', 'Generar PDF', 'Consultar caja'],
         'caja' => ['Registrar cobros', 'Caja', 'Abonos', 'Precios de examenes', 'Anular movimientos autorizados'],
     ];
 

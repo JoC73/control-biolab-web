@@ -165,6 +165,19 @@ class BiolabCriticalFlowTest extends TestCase
             ->assertSee('Guardar egreso');
     }
 
+    public function test_cash_view_is_available_to_reception_laboratory_and_cashier_profiles(): void
+    {
+        foreach (['recepcion', 'laboratorio', 'caja'] as $role) {
+            $this->actingAsBiolab($role)
+                ->get('/caja')
+                ->assertOk()
+                ->assertSee('Ingresos y egresos')
+                ->assertSee('Ingresos validos del periodo')
+                ->assertSee('Egresos validos del periodo')
+                ->assertSee('Detalle de caja');
+        }
+    }
+
     public function test_cash_history_filters_by_day_week_month_and_year(): void
     {
         $this->actingAsBiolab('caja');
