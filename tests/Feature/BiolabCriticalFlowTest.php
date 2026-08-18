@@ -163,7 +163,24 @@ class BiolabCriticalFlowTest extends TestCase
             ->assertSee('name="type" value="expense"', false)
             ->assertSee('Monto / cantidad')
             ->assertSee('Descripcion')
-            ->assertSee('Guardar egreso');
+            ->assertSee('Guardar egreso')
+            ->assertDontSee('Registrar ingreso')
+            ->assertDontSee('name="type" value="income"', false);
+    }
+
+    public function test_cash_screen_rejects_manual_income_entries(): void
+    {
+        $this->actingAsBiolab('caja')
+            ->post('/caja', [
+                'type' => 'income',
+                'date' => '2026-07-10',
+                'amount' => 100,
+                'method' => 'efectivo',
+                'description' => 'Ingreso manual indebido',
+            ])
+            ->assertSessionHasErrors('type');
+
+        $this->assertCount(0, app(CashStore::class)->all());
     }
 
     public function test_cash_view_is_available_to_reception_laboratory_and_cashier_profiles(): void
@@ -184,15 +201,14 @@ class BiolabCriticalFlowTest extends TestCase
         foreach (['recepcion', 'laboratorio', 'caja'] as $index => $role) {
             $date = '2026-07-'.str_pad((string) ($index + 11), 2, '0', STR_PAD_LEFT);
 
-            $this->actingAsBiolab($role)
-                ->post('/caja', [
-                    'type' => 'income',
-                    'date' => $date,
-                    'amount' => 100,
-                    'method' => 'efectivo',
-                    'description' => 'Ingreso '.$role,
-                ])
-                ->assertRedirect();
+            app(CashStore::class)->create([
+                'type' => 'income',
+                'date' => $date,
+                'amount' => 100,
+                'method' => 'efectivo',
+                'description' => 'Cobro de orden '.$role,
+                'source' => 'order_payment',
+            ]);
 
             $this->actingAsBiolab($role)
                 ->post('/caja', [
@@ -219,7 +235,7 @@ class BiolabCriticalFlowTest extends TestCase
 
         $this->assertCount(6, $movements);
         $this->assertSame(3, $movements->where('status', 'voided')->count());
-        $this->assertSame(6, $audits->where('action', 'cash_manual_created')->count());
+        $this->assertSame(3, $audits->where('action', 'cash_expense_created')->count());
         $this->assertSame(3, $audits->where('action', 'cash_voided')->count());
         $this->assertSame(['caja', 'laboratorio', 'recepcion'], $audits->where('action', 'cash_voided')->pluck('user_role')->sort()->values()->all());
 

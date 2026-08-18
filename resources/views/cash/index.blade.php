@@ -8,7 +8,7 @@
             <div>
                 <p class="eyebrow">Caja</p>
                 <h1>Ingresos y egresos</h1>
-                <p>Registra movimientos y revisa el historial sin salir del flujo de trabajo.</p>
+                <p>Registra egresos y revisa los ingresos generados por cobros de ordenes.</p>
             </div>
             <div class="top-actions">
                 @if ($auth->hasPermission('orders.view'))
@@ -61,28 +61,12 @@
                     <div class="section-heading">
                         <div>
                             <p class="eyebrow">Movimiento nuevo</p>
-                            <h2>Registrar en caja</h2>
+                            <h2>Registrar egreso</h2>
                         </div>
                         <span class="soft-badge">Disponible hoy Q {{ number_format($dailyTotals['balance'], 2) }}</span>
                     </div>
 
                     <div class="cash-action-grid">
-                        <form class="cash-quick-card income-entry-card" method="POST" action="{{ route('cash.store') }}">
-                            @csrf
-                            <input type="hidden" name="type" value="income">
-                            <div class="cash-card-title">
-                                <span>Ingreso</span>
-                                <strong>Registrar ingreso</strong>
-                            </div>
-                            <div class="field"><label>Monto / cantidad</label><input name="amount" type="number" min="0.01" step="0.01" value="{{ old('type') === 'income' ? old('amount') : '' }}" placeholder="0.00" required></div>
-                            <div class="field"><label>Descripcion</label><input name="description" value="{{ old('type') === 'income' ? old('description') : '' }}" placeholder="Ej. ingreso manual de caja" required></div>
-                            <div class="cash-inline-fields">
-                                <div class="field"><label>Fecha</label><input name="date" type="date" value="{{ old('type') === 'income' ? old('date', $filters['date']) : $filters['date'] }}" required></div>
-                                <div class="field"><label>Metodo</label><select name="method"><option value="efectivo" @selected(old('type') === 'income' && old('method')==='efectivo')>Efectivo</option><option value="transferencia" @selected(old('type') === 'income' && old('method')==='transferencia')>Transferencia</option><option value="tarjeta" @selected(old('type') === 'income' && old('method')==='tarjeta')>Tarjeta</option></select></div>
-                            </div>
-                            <button class="button primary" type="submit">Guardar ingreso</button>
-                        </form>
-
                         <form class="cash-quick-card expense-entry-card" method="POST" action="{{ route('cash.store') }}">
                             @csrf
                             <input type="hidden" name="type" value="expense">

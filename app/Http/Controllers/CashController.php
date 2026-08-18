@@ -48,31 +48,29 @@ class CashController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'type' => ['required', 'in:income,expense'],
+            'type' => ['required', 'in:expense'],
             'date' => ['required', 'date'],
             'amount' => ['required', 'numeric', 'min:0.01'],
             'method' => ['required', 'string', 'max:40'],
             'description' => ['required', 'string', 'max:240'],
         ]);
 
-        if ($data['type'] === 'expense') {
-            $available = round((float) $this->cash->totals($data['date'])['balance'], 2);
-            $amount = round((float) $data['amount'], 2);
+        $available = round((float) $this->cash->totals($data['date'])['balance'], 2);
+        $amount = round((float) $data['amount'], 2);
 
-            if ($amount > $available) {
-                return back()
-                    ->withErrors(['amount' => 'El egreso no puede exceder el saldo disponible del dia: Q '.number_format($available, 2).'.'])
-                    ->withInput();
-            }
+        if ($amount > $available) {
+            return back()
+                ->withErrors(['amount' => 'El egreso no puede exceder el saldo disponible del dia: Q '.number_format($available, 2).'.'])
+                ->withInput();
         }
 
         $movement = $this->cash->create($data + ['source' => 'manual']);
-        $this->audit->record('cash_manual_created', 'cash', $movement['id'], [
+        $this->audit->record('cash_expense_created', 'cash', $movement['id'], [
             'type' => $movement['type'],
             'amount' => $movement['amount'],
         ]);
 
-        return redirect()->route('cash.index', ['date' => $data['date']])->with('status', 'Movimiento registrado.');
+        return redirect()->route('cash.index', ['date' => $data['date']])->with('status', 'Egreso registrado.');
     }
 
     public function void(Request $request, string $id)
