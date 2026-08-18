@@ -67,7 +67,7 @@
                     </div>
 
                     <div class="cash-action-grid">
-                        <form class="cash-quick-card expense-entry-card" method="POST" action="{{ route('cash.store') }}">
+                        <form class="cash-quick-card expense-entry-card expense-entry-horizontal" method="POST" action="{{ route('cash.store') }}">
                             @csrf
                             <input type="hidden" name="type" value="expense">
                             <div class="cash-card-title">
@@ -76,10 +76,8 @@
                             </div>
                             <div class="field"><label>Monto / cantidad</label><input name="amount" type="number" min="0.01" step="0.01" value="{{ old('type') === 'expense' ? old('amount') : '' }}" placeholder="0.00" required></div>
                             <div class="field"><label>Descripcion</label><input name="description" value="{{ old('type') === 'expense' ? old('description') : '' }}" placeholder="Ej. compra de reactivos o insumos" required></div>
-                            <div class="cash-inline-fields">
-                                <div class="field"><label>Fecha</label><input name="date" type="date" value="{{ old('type') === 'expense' ? old('date', $filters['date']) : $filters['date'] }}" required></div>
-                                <div class="field"><label>Metodo</label><select name="method"><option value="efectivo" @selected(old('type') === 'expense' && old('method')==='efectivo')>Efectivo</option><option value="transferencia" @selected(old('type') === 'expense' && old('method')==='transferencia')>Transferencia</option><option value="tarjeta" @selected(old('type') === 'expense' && old('method')==='tarjeta')>Tarjeta</option></select></div>
-                            </div>
+                            <div class="field"><label>Fecha</label><input name="date" type="date" value="{{ old('type') === 'expense' ? old('date', $filters['date']) : $filters['date'] }}" required></div>
+                            <div class="field"><label>Metodo</label><select name="method"><option value="efectivo" @selected(old('type') === 'expense' && old('method')==='efectivo')>Efectivo</option><option value="transferencia" @selected(old('type') === 'expense' && old('method')==='transferencia')>Transferencia</option><option value="tarjeta" @selected(old('type') === 'expense' && old('method')==='tarjeta')>Tarjeta</option></select></div>
                             <button class="button danger-button" type="submit">Guardar egreso</button>
                         </form>
                     </div>

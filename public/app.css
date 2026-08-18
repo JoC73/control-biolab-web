@@ -1751,7 +1751,7 @@ button:disabled,
 
 .cash-action-grid {
     display: grid;
-    grid-template-columns: minmax(280px, 560px);
+    grid-template-columns: minmax(0, 1fr);
     gap: 14px;
 }
 
@@ -1763,6 +1763,20 @@ button:disabled,
     border: 1px solid var(--line);
     border-radius: 8px;
     background: #fff;
+}
+
+.expense-entry-horizontal {
+    grid-template-columns: minmax(160px, .75fr) minmax(130px, .65fr) minmax(260px, 1.35fr) minmax(150px, .72fr) minmax(150px, .72fr) auto;
+    align-items: end;
+}
+
+.expense-entry-horizontal .cash-card-title {
+    align-self: center;
+}
+
+.expense-entry-horizontal .button {
+    min-height: 42px;
+    white-space: nowrap;
 }
 
 .cash-card-title {
@@ -2209,6 +2223,10 @@ button:disabled,
     }
 
     .cash-movement-main {
+        grid-template-columns: 1fr;
+    }
+
+    .expense-entry-horizontal {
         grid-template-columns: 1fr;
     }
 
