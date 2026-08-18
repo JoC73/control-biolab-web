@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Services\AuditStore;
 use App\Services\CashStore;
 use App\Services\CatalogStore;
 use App\Services\OrderStore;
@@ -176,6 +177,58 @@ class BiolabCriticalFlowTest extends TestCase
                 ->assertSee('Egresos validos del periodo')
                 ->assertSee('Detalle de caja');
         }
+    }
+
+    public function test_cash_management_is_available_to_reception_laboratory_and_cashier_profiles_with_history(): void
+    {
+        foreach (['recepcion', 'laboratorio', 'caja'] as $index => $role) {
+            $date = '2026-07-'.str_pad((string) ($index + 11), 2, '0', STR_PAD_LEFT);
+
+            $this->actingAsBiolab($role)
+                ->post('/caja', [
+                    'type' => 'income',
+                    'date' => $date,
+                    'amount' => 100,
+                    'method' => 'efectivo',
+                    'description' => 'Ingreso '.$role,
+                ])
+                ->assertRedirect();
+
+            $this->actingAsBiolab($role)
+                ->post('/caja', [
+                    'type' => 'expense',
+                    'date' => $date,
+                    'amount' => 25,
+                    'method' => 'efectivo',
+                    'description' => 'Egreso '.$role,
+                ])
+                ->assertRedirect();
+
+            $movement = app(CashStore::class)->search(['date' => $date])
+                ->firstWhere('description', 'Egreso '.$role);
+
+            $this->assertSame(ucfirst($role), $movement['created_by']);
+
+            $this->actingAsBiolab($role)
+                ->post("/caja/{$movement['id']}/anular", ['reason' => 'Control '.$role])
+                ->assertRedirect();
+        }
+
+        $movements = app(CashStore::class)->all();
+        $audits = app(AuditStore::class)->all();
+
+        $this->assertCount(6, $movements);
+        $this->assertSame(3, $movements->where('status', 'voided')->count());
+        $this->assertSame(6, $audits->where('action', 'cash_manual_created')->count());
+        $this->assertSame(3, $audits->where('action', 'cash_voided')->count());
+        $this->assertSame(['caja', 'laboratorio', 'recepcion'], $audits->where('action', 'cash_voided')->pluck('user_role')->sort()->values()->all());
+
+        $this->actingAsBiolab('laboratorio')
+            ->get('/caja?period=month&month=2026-07&date=2026-07-11')
+            ->assertOk()
+            ->assertSee('Registrado por')
+            ->assertSee('Laboratorio')
+            ->assertSee('Control laboratorio');
     }
 
     public function test_cash_history_filters_by_day_week_month_and_year(): void

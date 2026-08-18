@@ -1804,7 +1804,7 @@ button:disabled,
 
 .cash-table {
     display: grid;
-    grid-template-columns: 112px 102px minmax(260px, 1.8fr) 116px 110px 98px minmax(210px, 1.2fr);
+    grid-template-columns: 112px 96px minmax(240px, 1.7fr) 106px 104px 92px 132px minmax(190px, 1.1fr);
     border: 1px solid var(--line);
     border-radius: 8px;
     overflow: hidden;

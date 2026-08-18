@@ -128,6 +128,7 @@
                 <div class="cash-table-head">Metodo</div>
                 <div class="cash-table-head">Monto</div>
                 <div class="cash-table-head">Estado</div>
+                <div class="cash-table-head">Registrado por</div>
                 <div class="cash-table-head">Accion</div>
 
                 @forelse ($movements as $movement)
@@ -143,6 +144,7 @@
                         <div>{{ ucfirst($movement['method']) }}</div>
                         <div class="amount-cell">Q {{ number_format($movement['amount'], 2) }}</div>
                         <div>{{ $movement['status'] === 'voided' ? 'Anulado' : 'Activo' }}</div>
+                        <div>{{ $movement['created_by'] ?: 'Sistema' }}</div>
                         <div>
                             @if ($movement['status'] === 'active' && $auth->hasPermission('cash.manage'))
                                 <form class="void-form" method="POST" action="{{ route('cash.void', $movement['id']) }}" onsubmit="return confirm('Deseas anular este movimiento?')">
