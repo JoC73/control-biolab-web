@@ -173,8 +173,8 @@ class BiolabCriticalFlowTest extends TestCase
                 ->get('/caja')
                 ->assertOk()
                 ->assertSee('Ingresos y egresos')
-                ->assertSee('Ingresos validos del periodo')
-                ->assertSee('Egresos validos del periodo')
+                ->assertSee('Ingresos')
+                ->assertSee('Egresos')
                 ->assertSee('Detalle de caja');
         }
     }

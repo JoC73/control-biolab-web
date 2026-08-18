@@ -1686,6 +1686,233 @@ button:disabled,
     gap: 14px;
 }
 
+.cash-shell .topbar p:not(.eyebrow) {
+    margin: 4px 0 0;
+    color: var(--muted);
+}
+
+.cash-dashboard {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.cash-metric-card {
+    display: grid;
+    gap: 6px;
+    min-height: 118px;
+    padding: 16px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #fff;
+    box-shadow: var(--shadow);
+}
+
+.cash-metric-card span {
+    color: var(--muted);
+    font-size: .86rem;
+    font-weight: 800;
+}
+
+.cash-metric-card strong {
+    color: var(--ink);
+    font-size: 1.55rem;
+    font-weight: 950;
+}
+
+.cash-metric-card small {
+    color: #51667a;
+    font-size: .84rem;
+}
+
+.cash-metric-balance {
+    border-color: #a9d6ca;
+    background: #f7fffc;
+}
+
+.cash-metric-expense {
+    border-color: #efc0ba;
+    background: #fffafa;
+}
+
+.cash-workspace {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(260px, 320px);
+    gap: 14px;
+    align-items: stretch;
+}
+
+.cash-action-panel,
+.cash-history-panel,
+.cash-month-panel {
+    display: grid;
+    gap: 14px;
+}
+
+.cash-action-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.cash-quick-card {
+    display: grid;
+    gap: 12px;
+    align-content: start;
+    padding: 14px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #fff;
+}
+
+.cash-card-title {
+    display: grid;
+    gap: 2px;
+}
+
+.cash-card-title span {
+    color: var(--muted);
+    font-size: .76rem;
+    font-weight: 900;
+    text-transform: uppercase;
+}
+
+.cash-card-title strong {
+    color: var(--ink);
+    font-size: 1.05rem;
+}
+
+.cash-inline-fields {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 10px;
+}
+
+.cash-month-form {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 8px;
+    align-items: end;
+}
+
+.cash-month-form label {
+    grid-column: 1 / -1;
+}
+
+.cash-month-list {
+    display: grid;
+    gap: 8px;
+}
+
+.cash-month-list span {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 10px 0;
+    border-top: 1px solid var(--line);
+    color: var(--muted);
+}
+
+.cash-month-list strong {
+    color: var(--ink);
+}
+
+.cash-filter-bar {
+    display: grid;
+    grid-template-columns: minmax(130px, .8fr) minmax(160px, 1fr) minmax(150px, 1fr) minmax(130px, .8fr) auto;
+    gap: 10px;
+    align-items: end;
+}
+
+.cash-movement-list {
+    display: grid;
+    gap: 10px;
+}
+
+.cash-movement-item {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(210px, auto);
+    gap: 14px;
+    align-items: center;
+    padding: 14px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #fff;
+}
+
+.cash-movement-main {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 12px;
+    align-items: start;
+}
+
+.cash-movement-main strong,
+.cash-movement-main span,
+.cash-movement-main em,
+.cash-movement-side strong,
+.cash-movement-side span {
+    display: block;
+}
+
+.cash-movement-main strong {
+    overflow-wrap: anywhere;
+}
+
+.cash-movement-main span {
+    margin-top: 4px;
+    color: var(--muted);
+    font-size: .88rem;
+}
+
+.cash-movement-main em {
+    margin-top: 6px;
+    color: #9b3412;
+    font-style: normal;
+    font-size: .86rem;
+    font-weight: 800;
+}
+
+.cash-type-pill {
+    min-width: 74px;
+    padding: 6px 8px;
+    border-radius: 8px;
+    font-size: .76rem;
+    font-weight: 950;
+    text-align: center;
+}
+
+.income-pill {
+    background: #e8f8f1;
+    color: #116047;
+}
+
+.expense-pill {
+    background: #fff0ec;
+    color: #a13121;
+}
+
+.cash-movement-side {
+    display: grid;
+    gap: 6px;
+    justify-items: end;
+}
+
+.cash-movement-side strong {
+    font-size: 1.08rem;
+    font-weight: 950;
+}
+
+.cash-movement-side span {
+    color: var(--muted);
+    font-size: .84rem;
+}
+
+.compact-void-form {
+    grid-template-columns: minmax(110px, 1fr) auto;
+    max-width: 320px;
+}
+
 .monthly-cash-panel {
     display: grid;
     gap: 14px;
@@ -1966,9 +2193,33 @@ button:disabled,
     .exam-builder-head,
     .exam-picker-toolbar,
     .cash-entry-split,
+    .cash-dashboard,
+    .cash-workspace,
+    .cash-action-grid,
+    .cash-filter-bar,
+    .cash-inline-fields,
+    .cash-movement-item,
     .month-filter,
     .monthly-summary-grid {
         grid-template-columns: 1fr;
+    }
+
+    .cash-metric-card {
+        min-height: 96px;
+    }
+
+    .cash-movement-main {
+        grid-template-columns: 1fr;
+    }
+
+    .cash-movement-side {
+        justify-items: stretch;
+    }
+
+    .compact-void-form,
+    .cash-month-form {
+        grid-template-columns: 1fr;
+        max-width: none;
     }
 
     .exam-summary-pills {
