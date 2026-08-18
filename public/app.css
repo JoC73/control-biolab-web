@@ -1749,6 +1749,10 @@ button:disabled,
     gap: 14px;
 }
 
+.cash-action-panel {
+    gap: 10px;
+}
+
 .cash-action-grid {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
@@ -1766,16 +1770,44 @@ button:disabled,
 }
 
 .expense-entry-horizontal {
-    grid-template-columns: minmax(160px, .75fr) minmax(130px, .65fr) minmax(260px, 1.35fr) minmax(150px, .72fr) minmax(150px, .72fr) auto;
+    grid-template-columns: minmax(116px, .58fr) minmax(110px, .54fr) minmax(230px, 1.35fr) minmax(132px, .68fr) minmax(132px, .68fr) auto;
     align-items: end;
+    gap: 8px;
+    padding: 10px;
 }
 
 .expense-entry-horizontal .cash-card-title {
     align-self: center;
 }
 
+.expense-entry-horizontal .cash-card-title span {
+    font-size: .66rem;
+}
+
+.expense-entry-horizontal .cash-card-title strong {
+    font-size: .9rem;
+    line-height: 1.05;
+}
+
+.expense-entry-horizontal .field {
+    gap: 3px;
+}
+
+.expense-entry-horizontal label {
+    min-height: 20px;
+    padding: 1px 6px;
+    font-size: .78rem;
+}
+
+.expense-entry-horizontal input,
+.expense-entry-horizontal select {
+    min-height: 34px;
+    padding: 6px 8px;
+}
+
 .expense-entry-horizontal .button {
-    min-height: 42px;
+    min-height: 34px;
+    padding-inline: 12px;
     white-space: nowrap;
 }
 
